@@ -1,0 +1,21 @@
+/*
+ * fxas21002.h
+ *
+ *  Created on: Jun 2, 2025
+ *      Author: joest
+ */
+
+#ifndef INC_FXAS21002_H_
+#define INC_FXAS21002_H_
+
+#include "stm32f0xx_hal_conf.h"
+
+#define FXAS21002_ADDR        (0x20 << 1)   // 8-bit Adresse
+#define FXAS21002_WHO_AM_I    0x0C
+#define FXAS21002_CTRL_REG1   0x13
+#define FXAS21002_OUT_Z_MSB   0x07
+
+uint8_t FXAS21002_Init(I2C_HandleTypeDef *hi2c);
+int16_t FXAS21002_ReadZ(I2C_HandleTypeDef *hi2c);
+
+#endif /* INC_FXAS21002_H_ */
