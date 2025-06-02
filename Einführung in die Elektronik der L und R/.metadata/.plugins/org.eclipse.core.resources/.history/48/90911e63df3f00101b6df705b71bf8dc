@@ -128,33 +128,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  // Buffer for two bytes: Z_MSB and Z_LSB
-	  uint8_t gyro_z_raw[2] = {0};
-
-	  // Read 2 bytes starting at register 0x05 (OUT_Z_MSB)
-	  if (HAL_I2C_Mem_Read(&hi2c1, 0x42, 0x05, I2C_MEMADD_SIZE_8BIT, gyro_z_raw, 2, HAL_MAX_DELAY) == HAL_OK) {
-
-	      // Combine MSB and LSB into signed 16-bit integer
-	      int16_t gyro_z = (int16_t)((gyro_z_raw[0] << 8) | gyro_z_raw[1]);
-
-	      // Now gyro_z holds the raw angular rate around Z (in LSB)
-
-	      // Example: adjust LED brightness as test
-	      uint8_t duty = 50;  // Default 50% = off
-	      if (gyro_z > 100) {
-	          duty = 99;  // Simulated positive rotation → LED hell
-	      } else if (gyro_z < -100) {
-	          duty = 1;  // Simulated negative rotation → LED dunkler
-	      }
-
-	      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, duty);  // Torquer X LED
-
-	      HAL_Delay(100);  // 10 Hz = später über Timer lösen
-	  }
   }
   /* USER CODE END 3 */
 }

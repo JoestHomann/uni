@@ -128,10 +128,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
 	  // Buffer for two bytes: Z_MSB and Z_LSB
 	  uint8_t gyro_z_raw[2] = {0};
 
@@ -145,16 +141,19 @@ int main(void)
 
 	      // Example: adjust LED brightness as test
 	      uint8_t duty = 50;  // Default 50% = off
-	      if (gyro_z > 100) {
-	          duty = 99;  // Simulated positive rotation → LED hell
-	      } else if (gyro_z < -100) {
-	          duty = 1;  // Simulated negative rotation → LED dunkler
+	      if (gyro_z > 1000) {
+	          duty = 75;  // Simulated positive rotation → LED hell
+	      } else if (gyro_z < -1000) {
+	          duty = 25;  // Simulated negative rotation → LED dunkler
 	      }
 
 	      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, duty);  // Torquer X LED
 
 	      HAL_Delay(100);  // 10 Hz = später über Timer lösen
 	  }
+    /* USER CODE END WHILE */
+
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
