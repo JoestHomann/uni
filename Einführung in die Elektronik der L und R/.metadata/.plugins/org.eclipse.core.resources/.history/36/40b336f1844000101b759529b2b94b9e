@@ -429,7 +429,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) //JH ->__weak protot
   if (htim->Instance == TIM14)
   {
     static uint8_t brightness = 50;
-    brightness += 10;
+    brightness += 10; //JH
     if (brightness > 100) brightness = 0;
 
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, brightness);
