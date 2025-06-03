@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;2D-Detumbling-ACS_testing/2D-Detumbling-ACS.ioc&apos; to &apos;2D-Detumbling-ACS_tesing.ioc&apos;" description="Rename resource &apos;2D-Detumbling-ACS.ioc&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="2D-Detumbling-ACS.ioc" name="2D-Detumbling-ACS_tesing.ioc" stamp="1748940725810" updateReferences="true"/>
+</session>

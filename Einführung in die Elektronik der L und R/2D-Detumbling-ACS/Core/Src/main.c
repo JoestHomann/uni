@@ -40,9 +40,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-I2C_HandleTypeDef hi2c1;
-
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim14;
 
 /* USER CODE BEGIN PV */
 
@@ -52,14 +51,15 @@ TIM_HandleTypeDef htim3;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_I2C1_Init(void);
+static void MX_TIM14_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern TIM_HandleTypeDef htim14;	//JH
+extern TIM_HandleTypeDef htim3;		//JH
 /* USER CODE END 0 */
 
 /**
@@ -92,35 +92,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM3_Init();
-  MX_I2C1_Init();
+  MX_TIM14_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3); //JH PC8
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4); //JH PC9
 
-  // Start PWM on
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);	// TIM3 Channel 3 (LD4 = Torquer X)
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);	// TIM3 Channel 4 (LD3 = Torquer Y)
-
-  // Set PWM duty cycle
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 75); // X-Magnetorquer to 75% -> Preliminary value for testing
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 25);	// Y-Magnetorquer to 25% -> Preliminary value for testing
-
-
-  // FXAS21002: Check WHO_AM_I register
-  uint8_t who_am_i = 0;
-
-  // Read WHO_AM_I register (0x0C), expect 0xD7
-  if (HAL_I2C_Mem_Read(&hi2c1, 0x42, 0x0C, I2C_MEMADD_SIZE_8BIT, &who_am_i, 1, HAL_MAX_DELAY) != HAL_OK) {
-
-      Error_Handler();	// I2C communication failed
-  }
-
-  // If sensor does not return expected ID, turn on error LED and halt
-  if (who_am_i == 0xD7) {
-
-      // Blink LD3 once as confirmation
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);  // Turn on LD3
-      HAL_Delay(500);
-      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);  // Turn off LD3
-  }
+  HAL_TIM_Base_Start_IT(&htim14);  //JH Startet 10Hz-Interrupt
 
   /* USER CODE END 2 */
 
@@ -128,33 +105,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  // Buffer for two bytes: Z_MSB and Z_LSB
-	  uint8_t gyro_z_raw[2] = {0};
-
-	  // Read 2 bytes starting at register 0x05 (OUT_Z_MSB)
-	  if (HAL_I2C_Mem_Read(&hi2c1, 0x42, 0x05, I2C_MEMADD_SIZE_8BIT, gyro_z_raw, 2, HAL_MAX_DELAY) == HAL_OK) {
-
-	      // Combine MSB and LSB into signed 16-bit integer
-	      int16_t gyro_z = (int16_t)((gyro_z_raw[0] << 8) | gyro_z_raw[1]);
-
-	      // Now gyro_z holds the raw angular rate around Z (in LSB)
-
-	      // Example: adjust LED brightness as test
-	      uint8_t duty = 50;  // Default 50% = off
-	      if (gyro_z > 100) {
-	          duty = 99;  // Simulated positive rotation → LED hell
-	      } else if (gyro_z < -100) {
-	          duty = 1;  // Simulated negative rotation → LED dunkler
-	      }
-
-	      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, duty);  // Torquer X LED
-
-	      HAL_Delay(100);  // 10 Hz = später über Timer lösen
-	  }
   }
   /* USER CODE END 3 */
 }
@@ -167,7 +120,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -196,60 +148,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C1_Init(void)
-{
-
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00201D2B;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
-
 }
 
 /**
@@ -264,7 +162,6 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 0 */
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
@@ -272,20 +169,11 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 47;
+  htim3.Init.Prescaler = 479;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 100;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
@@ -304,7 +192,6 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.Pulse = 0;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
@@ -313,6 +200,37 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
+  * @brief TIM14 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM14_Init(void)
+{
+
+  /* USER CODE BEGIN TIM14_Init 0 */
+
+  /* USER CODE END TIM14_Init 0 */
+
+  /* USER CODE BEGIN TIM14_Init 1 */
+
+  /* USER CODE END TIM14_Init 1 */
+  htim14.Instance = TIM14;
+  htim14.Init.Prescaler = 47999;
+  htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim14.Init.Period = 99;
+  htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM14_Init 2 */
+
+  /* USER CODE END TIM14_Init 2 */
 
 }
 
@@ -333,11 +251,19 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin : Seperation_Switch_Pin */
-  GPIO_InitStruct.Pin = Seperation_Switch_Pin;
+  /*Configure GPIO pin : Blue_Switch_Pin */
+  GPIO_InitStruct.Pin = Blue_Switch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(Seperation_Switch_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Blue_Switch_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB6 PB7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF1_I2C1;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -345,6 +271,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) //JH
+{
+  if (htim->Instance == TIM14)
+  {
+    static uint8_t brightness = 50;
+    brightness += 10; //JH
+    if (brightness > 100) brightness = 0;
+
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, brightness);
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 100 - brightness);
+  }
+}//JH
 
 /* USER CODE END 4 */
 
