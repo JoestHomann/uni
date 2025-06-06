@@ -22,9 +22,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include <math.h>  // für fabsf()
-#include <stdint.h>
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,13 +60,7 @@ static void MX_I2C1_Init(void);
 uint8_t check_fxas21002(void);
 uint8_t check_fxos8700(void);
 void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);
-
-float read_gyro(float* gyro_z);
-void read_magnetometer(int16_t* mag_x, int16_t* mag_z);
-
-void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y);
-
-void set_pwm(uint8_t pwm_x, uint8_t pwm_y);
+void init_fxas21002(void);
 
 /* USER CODE END PFP */
 
@@ -119,6 +110,15 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 50);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 50);
 
+
+  // DEBUG: WHO_AM_I auslesen und direkt per PWM anzeigen
+   uint8_t id = 0;
+   HAL_I2C_Mem_Read(&hi2c1, 0x20 << 1, 0x0C, I2C_MEMADD_SIZE_8BIT, &id, 1, 100);
+   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, id-116);  // LED3 zeigt ID-Wert
+   HAL_Delay(3000); // 3 Sekunden anzeigen
+
+  init_fxas21002();
+  HAL_Delay(500);  // 500ms Wartezeit
 
   if (check_fxas21002())
   {
@@ -418,7 +418,7 @@ uint8_t check_fxos8700(void)
 
 uint8_t check_fxas21002(void)
 {
-  uint8_t fxas_addr = 0x21 << 1;           // 7-bit Adresse (0x20) << 1 für HAL
+  uint8_t fxas_addr = 0x20 << 1;           // 7-bit Adresse (0x20) << 1 für HAL
   uint8_t reg_addr = 0x0C;                 // WHO_AM_I Register
   uint8_t id = 0;
 
@@ -435,107 +435,40 @@ uint8_t check_fxas21002(void)
   return 0;  // Falsche ID
 }
 
-float read_gyro(float* gyro_z)
+
+void init_fxas21002(void)
 {
-    const uint8_t fxas_addr = 0x21 << 1;  // SA0 = HIGH → Adresse 0x21 << 1 = 0x42
-    const uint8_t reg_msb = 0x06;
-    uint8_t data[2] = {0};
-    int16_t raw_z = 0;
+  uint8_t fxas_addr = 0x20 << 1;
 
-    // 2 Bytes (MSB, LSB) lesen
-    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_msb, I2C_MEMADD_SIZE_8BIT, data, 2, 100) != HAL_OK)
-        return 0.0f;  // Fehler → 0 zurückgeben
+  // 1. CTRL_REG1 = 0x00 → Standby
+  uint8_t standby = 0x00;
+  HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &standby, 1, 100);
+  HAL_Delay(1000);
 
-    // Zusammenfügen in 16-bit signed integer
-    raw_z = (int16_t)((data[0] << 8) | data[1]);
+  // 2. CTRL_REG0 = 0x00 (Optional: FS = ±250 dps)
+  uint8_t ctrl_reg0 = 0x00;
+  HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
+  HAL_Delay(1000);
 
-    // Umrechnen in Grad/s bei ±250 dps Fullscale
-    // Laut Datenblatt: 7.8125 mdps/LSB → 0.0078125 dps/LSB
-    float gyro_z_dps = raw_z * 0.0078125f;
-
-    return gyro_z_dps;
+  // 3. CTRL_REG1 = 0x0E → Active, ODR = 100 Hz
+  uint8_t active = 0x0E;
+  HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &active, 1, 100);
+  HAL_Delay(1000);
 }
 
 
-void read_magnetometer(int16_t* mag_x, int16_t* mag_z)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) //JH ->__weak prototype: No pre-declaration needed
 {
-    const uint8_t fxos_addr = 0x1F << 1;  // SA1/SA0 = 1/1 → Adresse 0x1F << 1 = 0x3E
-    const uint8_t reg_mag_x_msb = 0x33;   // Magnetometer X MSB-Register
+  if (htim->Instance == TIM14)
+  {
+    static uint8_t brightness = 50;
+    brightness += 10;
+    if (brightness > 100) brightness = 0;
 
-    uint8_t data[6] = {0};  // X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
-
-    // 6 Bytes ab 0x33 lesen (X, Y, Z)
-    if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
-    {
-        *mag_x = 0;
-        *mag_z = 0;
-        return;
-    }
-
-    // Daten sind linksbündig (14 Bit), LSB-Bits ungenutzt
-    *mag_x = (int16_t)((data[0] << 8) | data[1]) >> 2;  // X
-    *mag_z = (int16_t)((data[4] << 8) | data[5]) >> 2;  // Z
-}
-
-void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
-{
-    const float threshold = 1.0f;     // °/s
-    const float scale = 0.2f;         // Skalierung von B zu PWM
-
-    if (fabsf(gyro_z) < threshold)
-    {
-        *pwm_x = 50;
-        *pwm_y = 50;
-        return;
-    }
-
-    // B × z = [-Bz, Bx, 0]
-    float m_x = -mag_z * scale;
-    float m_y =  mag_x * scale;
-
-    // Umwandlung in PWM-Werte (Offset 50)
-    int pwm_val_x = (int)(50.0f + m_x);
-    int pwm_val_y = (int)(50.0f + m_y);
-
-    // Begrenzen auf 0–100
-    if (pwm_val_x < 0) pwm_val_x = 0;
-    if (pwm_val_x > 100) pwm_val_x = 100;
-    if (pwm_val_y < 0) pwm_val_y = 0;
-    if (pwm_val_y > 100) pwm_val_y = 100;
-
-    *pwm_x = (uint8_t)pwm_val_x;
-    *pwm_y = (uint8_t)pwm_val_y;
-}
-
-
-void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
-{
-    // PWM setzen auf PC9 (X)
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwm_x);
-
-    // PWM setzen auf PC8 (Y)
-    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm_y);
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM14)
-    {
-        float gyro_z = 0;
-        int16_t mag_x = 0, mag_z = 0;
-        uint8_t pwm_x = 50, pwm_y = 50;
-
-        // 1. Sensorwerte auslesen
-        read_gyro(&gyro_z);
-        read_magnetometer(&mag_x, &mag_z);
-
-        // 2. Moment berechnen und PWM-Werte bestimmen
-        compute_torque(gyro_z, mag_x, mag_z, &pwm_x, &pwm_y);
-
-        // 3. PWM setzen
-        set_pwm(pwm_x, pwm_y);
-    }
-}
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, brightness);
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 100 - brightness);
+  }
+}//JH
 
 /* USER CODE END 4 */
 

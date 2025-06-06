@@ -64,7 +64,7 @@ uint8_t check_fxas21002(void);
 uint8_t check_fxos8700(void);
 void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);
 
-float read_gyro(float* gyro_z);
+float read_gyro(void);
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z);
 
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y);
@@ -435,7 +435,7 @@ uint8_t check_fxas21002(void)
   return 0;  // Falsche ID
 }
 
-float read_gyro(float* gyro_z)
+float read_gyro(void)
 {
     const uint8_t fxas_addr = 0x21 << 1;  // SA0 = HIGH → Adresse 0x21 << 1 = 0x42
     const uint8_t reg_msb = 0x06;
