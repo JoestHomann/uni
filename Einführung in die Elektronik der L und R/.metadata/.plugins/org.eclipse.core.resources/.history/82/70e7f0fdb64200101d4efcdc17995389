@@ -60,7 +60,6 @@ static void MX_I2C1_Init(void);
 uint8_t check_fxas21002(void);
 uint8_t check_fxos8700(void);
 void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);
-void init_fxas21002(void);
 
 /* USER CODE END PFP */
 
@@ -110,8 +109,7 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 50);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 50);
 
-  init_fxas21002();
-  HAL_Delay(1000);  // 1000ms Wartezeit
+
   if (check_fxas21002())
   {
     blink_sos_pwm(&htim3, TIM_CHANNEL_3); // PC8: Erfolg
@@ -391,7 +389,7 @@ void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel)
 
 uint8_t check_fxos8700(void)
 {
-  uint8_t fxos_addr = 0x1F << 1;  // Bit shift verstehen (SA0 =1???)
+  uint8_t fxos_addr = 0x1F << 1;  // 7-bit Adresse links shift → 0x3C
   uint8_t reg_addr = 0x0D;       // WHO_AM_I Register
   uint8_t id = 0;
 
@@ -425,27 +423,6 @@ uint8_t check_fxas21002(void)
   }
 
   return 0;  // Falsche ID
-}
-
-
-void init_fxas21002(void)
-{
-  uint8_t fxas_addr = 0x20 << 1;
-
-  // 1. CTRL_REG1 = 0x00 → Standby
-  uint8_t standby = 0x00;
-  HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &standby, 1, 100);
-  HAL_Delay(1000);
-
-  // 2. CTRL_REG0 = 0x00 (Optional: FS = ±250 dps)
-  uint8_t ctrl_reg0 = 0x00;
-  HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
-  HAL_Delay(1000);
-
-  // 3. CTRL_REG1 = 0x0E → Active, ODR = 100 Hz
-  uint8_t active = 0x0E;
-  HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &active, 1, 100);
-  HAL_Delay(1000);
 }
 
 
