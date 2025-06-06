@@ -1,4 +1,4 @@
-11:29:17 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+11:41:43 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
 make -j8 all 
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
 arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
@@ -13,5 +13,5 @@ Finished building: default.size.stdout
 Finished building: 2D-Detumbling-ACS.list
  
 
-11:29:18 Build Finished. 0 errors, 0 warnings. (took 758ms)
+11:41:44 Build Finished. 0 errors, 0 warnings. (took 758ms)
 

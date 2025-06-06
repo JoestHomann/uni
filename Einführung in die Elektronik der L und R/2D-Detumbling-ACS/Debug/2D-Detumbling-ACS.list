@@ -291,9 +291,9 @@ int main(void)
 
   init_fxas21002();
  8000260:	f000 fb1a 	bl	8000898 <init_fxas21002>
-  HAL_Delay(1000);  // 1000ms Wartezeit
+  HAL_Delay(500);  // 500ms Wartezeit
  8000264:	23fa      	movs	r3, #250	@ 0xfa
- 8000266:	009b      	lsls	r3, r3, #2
+ 8000266:	005b      	lsls	r3, r3, #1
  8000268:	0018      	movs	r0, r3
  800026a:	f000 fd5f 	bl	8000d2c <HAL_Delay>
   if (check_fxas21002())

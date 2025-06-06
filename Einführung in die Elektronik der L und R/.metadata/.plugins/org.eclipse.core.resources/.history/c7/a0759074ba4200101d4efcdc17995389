@@ -111,7 +111,7 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 50);
 
   init_fxas21002();
-  HAL_Delay(500);  // 500ms Wartezeit
+  HAL_Delay(1000);  // 1000ms Wartezeit
   if (check_fxas21002())
   {
     blink_sos_pwm(&htim3, TIM_CHANNEL_3); // PC8: Erfolg
