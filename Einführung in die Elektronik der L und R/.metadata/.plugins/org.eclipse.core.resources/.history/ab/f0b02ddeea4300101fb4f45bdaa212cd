@@ -70,7 +70,7 @@ void init_fxas21002(void);
 void init_fxos8700(void);
 
 // read sensors function
-void read_gyro(float* gyro_z);
+float read_gyro(float* gyro_z);
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z);
 
 // Calculation functions
@@ -503,68 +503,36 @@ void init_fxos8700(void)
 }
 
 
-void read_gyro(float* gyro_z)
+float read_gyro(float* gyro_z)
 {
-    const uint8_t fxas_addr = 0x21 << 1;
-    const uint8_t reg_status = 0x00;
-    const uint8_t reg_z_msb = 0x06;
-
-    uint8_t status = 0;
+    const uint8_t fxas_addr = 0x21 << 1;  // SA0 = HIGH → Adresse 0x21 << 1 = 0x42
+    const uint8_t reg_msb = 0x06;
     uint8_t data[2] = {0};
     int16_t raw_z = 0;
 
-    // Erst prüfen, ob neue Daten verfügbar sind
-    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
-    {
-        *gyro_z = 0.0f;
-        return;
-    }
+    // 2 Bytes (MSB, LSB) lesen
+    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_msb, I2C_MEMADD_SIZE_8BIT, data, 2, 100) != HAL_OK)
+        return 0.0f;  // Fehler → 0 zurückgeben
 
-    // Bit 0: ZYXDR = 1 → neue Daten
-    if ((status & 0x01) == 0)
-    {
-        *gyro_z = 0.0f;  // keine neuen Daten
-        return;
-    }
-
-    // Zwei Bytes Z-Achse lesen (MSB @ 0x06, LSB @ 0x07)
-    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_z_msb, I2C_MEMADD_SIZE_8BIT, data, 2, 100) != HAL_OK)
-    {
-        *gyro_z = 0.0f;
-        return;
-    }
-
+    // Zusammenfügen in 16-bit signed integer
     raw_z = (int16_t)((data[0] << 8) | data[1]);
-    *gyro_z = raw_z * 0.0078125f;  // 7.8125 mdps/LSB = 0.0078125 dps/LSB
+
+    // Umrechnen in Grad/s bei ±250 dps Fullscale
+    // Laut Datenblatt: 7.8125 mdps/LSB → 0.0078125 dps/LSB
+    float gyro_z_dps = raw_z * 0.0078125f;
+
+    return gyro_z_dps;
 }
 
 
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z)
 {
-    const uint8_t fxos_addr = 0x1F << 1;
-    const uint8_t reg_status = 0x00;
-    const uint8_t reg_mag_x_msb = 0x33;
+    const uint8_t fxos_addr = 0x1F << 1;  // SA1/SA0 = 1/1 → Adresse 0x1F << 1 = 0x3E
+    const uint8_t reg_mag_x_msb = 0x33;   // Magnetometer X MSB-Register
 
-    uint8_t status = 0;
     uint8_t data[6] = {0};  // X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
 
-    // Optional: STATUS-Register abfragen (nicht zwingend nötig bei kontinuierlichem Lesen)
-    if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
-    {
-        *mag_x = 0;
-        *mag_z = 0;
-        return;
-    }
-
-    // Bit 3: ZYXDR = 1 → neue XYZ-Daten verfügbar
-    if ((status & 0x08) == 0)
-    {
-        *mag_x = 0;
-        *mag_z = 0;
-        return;
-    }
-
-    // 6 Bytes ab 0x33 (X, Y, Z) lesen
+    // 6 Bytes ab 0x33 lesen (X, Y, Z)
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
         *mag_x = 0;
@@ -572,9 +540,9 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z)
         return;
     }
 
-    // 14-bit linksbündig → rechts shiften um 2 Bits
-    *mag_x = (int16_t)((data[0] << 8) | data[1]) >> 2;
-    *mag_z = (int16_t)((data[4] << 8) | data[5]) >> 2;
+    // Daten sind linksbündig (14 Bit), LSB-Bits ungenutzt
+    *mag_x = (int16_t)((data[0] << 8) | data[1]) >> 2;  // X
+    *mag_z = (int16_t)((data[4] << 8) | data[5]) >> 2;  // Z
 }
 
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
@@ -584,8 +552,8 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
 
     if (fabsf(gyro_z) < threshold)
     {
-        *pwm_x = 10;
-        *pwm_y = 10;
+        *pwm_x = 50;
+        *pwm_y = 50;
         return;
     }
 
@@ -625,7 +593,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         float gyro_z = 0;
         int16_t mag_x = 0, mag_z = 0;
-        uint8_t pwm_x = 50, pwm_y = 50;
+        uint8_t pwm_x = 10, pwm_y = 50;
 
         // 1. Sensorwerte auslesen
         read_gyro(&gyro_z);

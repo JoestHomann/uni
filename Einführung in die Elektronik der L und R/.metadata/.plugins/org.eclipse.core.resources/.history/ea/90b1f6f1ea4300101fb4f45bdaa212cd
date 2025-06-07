@@ -70,7 +70,7 @@ void init_fxas21002(void);
 void init_fxos8700(void);
 
 // read sensors function
-void read_gyro(float* gyro_z);
+float read_gyro(float* gyro_z);
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z);
 
 // Calculation functions
@@ -584,8 +584,8 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
 
     if (fabsf(gyro_z) < threshold)
     {
-        *pwm_x = 10;
-        *pwm_y = 10;
+        *pwm_x = 50;
+        *pwm_y = 50;
         return;
     }
 
@@ -625,7 +625,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         float gyro_z = 0;
         int16_t mag_x = 0, mag_z = 0;
-        uint8_t pwm_x = 50, pwm_y = 50;
+        uint8_t pwm_x = 10, pwm_y = 50;
 
         // 1. Sensorwerte auslesen
         read_gyro(&gyro_z);
