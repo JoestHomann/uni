@@ -635,8 +635,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         read_magnetometer(&mag_x, &mag_z);
 
         // Mapping-Skalierung anpassen, falls LEDs dauerhaft bei 0% oder 100% sind
-        int pwm_gyro = (int)(gyro_z * 0.5f + 50.0f);   // z. B. ±33.3 deg/s → 0–100
-        int pwm_magx = (int)(mag_x / 100.0f + 50.0f);  // z. B. ±5000 LSB → 0–100
+        int pwm_gyro = (int)(gyro_z * 2.0f + 50.0f);   // z. B. ±33.3 deg/s → 0–100
+        int pwm_magx = (int)(mag_x / 100.0f + 20.0f);  // z. B. ±5000 LSB → 0–100
 
         // Begrenzung auf gültigen Bereich
         if (pwm_gyro < 0) pwm_gyro = 0;

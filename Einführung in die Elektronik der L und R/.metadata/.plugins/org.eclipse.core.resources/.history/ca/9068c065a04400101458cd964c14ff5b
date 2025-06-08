@@ -431,7 +431,7 @@ uint8_t check_fxos8700(void)
 
 uint8_t check_fxas21002(void)
 {
-  uint8_t fxas_addr = 0x21 << 1;           // 7-bit Adresse (0x21) << 1 für HAL
+  uint8_t fxas_addr = 0x21 << 1;           // 7-bit Adresse (0x20) << 1 für HAL
   uint8_t reg_addr = 0x0C;                 // WHO_AM_I Register
   uint8_t id = 0;
 
@@ -453,8 +453,8 @@ void init_fxas21002(void)
 {
     const uint8_t fxas_addr = 0x21 << 1;  // SA0 = HIGH → I2C-Adresse 0x42
 
-    // 1. Standby: DR=011 (100 Hz), ACTIVE=0 ⇒ 0b0001 1000 = 0x18
-    uint8_t ctrl_reg1_standby = 0x18;
+    // 1. CTRL_REG1 = 0x0C → Standby, DR=100 Hz (011), ACTIVE=0
+    uint8_t ctrl_reg1_standby = 0x0C;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_standby, 1, 100);
     HAL_Delay(100);
 
@@ -468,8 +468,8 @@ void init_fxas21002(void)
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x15, I2C_MEMADD_SIZE_8BIT, &ctrl_reg3, 1, 100);
     HAL_Delay(100);
 
-    // 4. Aktivieren: gleiche DR-Bits + ACTIVE=1 ⇒ 0b0001 1100 = 0x1C
-    uint8_t ctrl_reg1_active = 0x1C;
+    // 4. CTRL_REG1 = 0x2C → Aktivieren: DR=100 Hz (011), ACTIVE=1
+    uint8_t ctrl_reg1_active = 0x2C;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_active, 1, 100);
     HAL_Delay(100);
 }
@@ -525,7 +525,7 @@ void read_gyro(float* gyro_z) // fxas21002
     }
 
     // Nur wenn neue Daten vorhanden
-    if ((status & 0x08) == 0)  // prüft ZYXDR // vorher: if ((status & 0x01) == 0) if ((status & 0x01) == 0) // prüft XDR
+    if ((status & 0x01) == 0)
     {
         *gyro_z = 10.0f;
         return;
@@ -635,8 +635,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         read_magnetometer(&mag_x, &mag_z);
 
         // Mapping-Skalierung anpassen, falls LEDs dauerhaft bei 0% oder 100% sind
-        int pwm_gyro = (int)(gyro_z * 0.5f + 50.0f);   // z. B. ±33.3 deg/s → 0–100
-        int pwm_magx = (int)(mag_x / 100.0f + 50.0f);  // z. B. ±5000 LSB → 0–100
+        int pwm_gyro = (int)(gyro_z * 1.0f + 256.0f);   // z. B. ±33.3 deg/s → 0–100
+        int pwm_magx = (int)(mag_x / 100.0f + 20.0f);  // z. B. ±5000 LSB → 0–100
 
         // Begrenzung auf gültigen Bereich
         if (pwm_gyro < 0) pwm_gyro = 0;
