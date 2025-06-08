@@ -154,19 +154,6 @@ int main(void)
   init_fxas21002();
   init_fxos8700();
 
-  // Blue Switch
-  // 1) Warte auf Drücken
-    while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_SET) {
-      /* idle */
-    }
-    HAL_Delay(20);  // Entprellen
-
-    // 2) Warte auf Loslassen
-    while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_RESET) {
-      /* idle */
-    }
-    HAL_Delay(20);  // Entprellen
-
   // Regelung startet
   HAL_TIM_Base_Start_IT(&htim14);  //JH Startet 10 Hz-Regeltakt
 
@@ -377,11 +364,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin : blue_switch_Pin */
-  GPIO_InitStruct.Pin = blue_switch_Pin;
+  /*Configure GPIO pin : Blue_Switch_Pin */
+  GPIO_InitStruct.Pin = Blue_Switch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(blue_switch_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Blue_Switch_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -597,31 +584,32 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
 
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
 {
-    // 1) Schwellwert gegen Rauschen
-    const float threshold = 1.0f;  // in °/s
-    if (fabsf(gyro_z) < threshold) {
-        *pwm_x = 50;  // Idle-Level (keine Dämpfung)
-        *pwm_y = 50;
+    const float threshold = 1.0f;     // °/s
+    const float scale = 0.2f;         // Skalierung von B zu PWM
+
+    if (fabsf(gyro_z) < threshold)
+    {
+        *pwm_x = 10;
+        *pwm_y = 10;
         return;
     }
 
-    // 2) Control-Law: m = –K * (ω × B)
-    //    Für 2D mit ω = [0,0,ωz], B = [Bx,0,Bz]:
-    //    ω×B = [ –ωz·Bz, ωz·Bx, 0 ]
-    const float K = 0.04f;  // einstellbarer Verstärkungsfaktor
-    float m_x = -K * gyro_z * (float)mag_z;
-    float m_y =  K * gyro_z * (float)mag_x;
+    // B × z = [-Bz, Bx, 0]
+    float m_x = -mag_z * scale;
+    float m_y =  mag_x * scale;
 
-    // 3) Umrechnung auf PWM-Werte (0-100)
-    int    p_x = (int)(50.0f + m_x * 0.1f);
-    int    p_y = (int)(50.0f + m_y * 0.1f);
+    // Umwandlung in PWM-Werte (Offset 50)
+    int pwm_val_x = (int)(50.0f + m_x);
+    int pwm_val_y = (int)(50.0f + m_y);
 
-    // clamp
-    p_x = p_x<0 ? 0 : (p_x>100 ? 100 : p_x);
-    p_y = p_y<0 ? 0 : (p_y>100 ? 100 : p_y);
+    // Begrenzen auf 0–100
+    if (pwm_val_x < 0) pwm_val_x = 0;
+    if (pwm_val_x > 100) pwm_val_x = 100;
+    if (pwm_val_y < 0) pwm_val_y = 0;
+    if (pwm_val_y > 100) pwm_val_y = 100;
 
-    *pwm_x = (uint8_t)p_x;
-    *pwm_y = (uint8_t)p_y;
+    *pwm_x = (uint8_t)pwm_val_x;
+    *pwm_y = (uint8_t)pwm_val_y;
 }
 
 

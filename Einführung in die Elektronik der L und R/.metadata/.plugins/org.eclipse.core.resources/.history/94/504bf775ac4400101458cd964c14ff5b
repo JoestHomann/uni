@@ -155,17 +155,17 @@ int main(void)
   init_fxos8700();
 
   // Blue Switch
-  // 1) Warte auf Drücken
-    while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_SET) {
-      /* idle */
-    }
-    HAL_Delay(20);  // Entprellen
-
-    // 2) Warte auf Loslassen
-    while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_RESET) {
-      /* idle */
-    }
-    HAL_Delay(20);  // Entprellen
+  // 1) Falls er noch gedrückt ist, erst auf Loslassen warten
+  while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_RESET) {
+	  // nix tun
+  }
+  // 2) kurzer Entprell-Delay
+  HAL_Delay(20);
+  // 3) noch einmal sicherstellen, dass er wirklich losgelassen ist
+  while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_RESET) {
+	  // nix tun
+  }
+  HAL_Delay(2000);
 
   // Regelung startet
   HAL_TIM_Base_Start_IT(&htim14);  //JH Startet 10 Hz-Regeltakt

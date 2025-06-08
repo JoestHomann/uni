@@ -165,7 +165,7 @@ int main(void)
     while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_RESET) {
       /* idle */
     }
-    HAL_Delay(20);  // Entprellen
+    HAL_Delay(2000);  // Entprellen
 
   // Regelung startet
   HAL_TIM_Base_Start_IT(&htim14);  //JH Startet 10 Hz-Regeltakt
