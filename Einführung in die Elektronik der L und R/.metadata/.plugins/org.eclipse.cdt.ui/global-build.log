@@ -1,25 +1,46 @@
-00:01:21 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+12:17:51 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
 make -j8 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc "../Core/Src/stm32f0xx_hal_msp.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32f0xx_hal_msp.d" -MT"Core/Src/stm32f0xx_hal_msp.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/stm32f0xx_hal_msp.o"
 arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 Finished building target: 2D-Detumbling-ACS.elf
  
 arm-none-eabi-size  2D-Detumbling-ACS.elf 
 arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
    text	   data	    bss	    dec	    hex	filename
-  17664	     12	   1796	  19472	   4c10	2D-Detumbling-ACS.elf
+  23396	     12	   1804	  25212	   627c	2D-Detumbling-ACS.elf
 Finished building: default.size.stdout
  
 Finished building: 2D-Detumbling-ACS.list
  
-00:01:24 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+12:17:56 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
 make -j8 all 
 arm-none-eabi-size  2D-Detumbling-ACS.elf 
    text	   data	    bss	    dec	    hex	filename
-  17664	     12	   1796	  19472	   4c10	2D-Detumbling-ACS.elf
+  23396	     12	   1804	  25212	   627c	2D-Detumbling-ACS.elf
 Finished building: default.size.stdout
  
-00:06:02 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+12:20:07 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/stm32f0xx_hal_msp.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/stm32f0xx_hal_msp.d" -MT"Core/Src/stm32f0xx_hal_msp.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/stm32f0xx_hal_msp.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  23396	     12	   1804	  25212	   627c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+12:46:30 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+   text	   data	    bss	    dec	    hex	filename
+  23396	     12	   1804	  25212	   627c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+17:00:58 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
 make -j8 all 
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
 arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
@@ -28,7 +49,507 @@ Finished building target: 2D-Detumbling-ACS.elf
 arm-none-eabi-size  2D-Detumbling-ACS.elf 
 arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
    text	   data	    bss	    dec	    hex	filename
-  17664	     12	   1796	  19472	   4c10	2D-Detumbling-ACS.elf
+  23384	     12	   1804	  25200	   6270	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:02:06 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  23392	     12	   1804	  25208	   6278	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:02:58 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  23392	     12	   1804	  25208	   6278	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:04:46 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  23388	     12	   1804	  25204	   6274	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:06:46 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:09:29 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17684	     12	   1796	  19492	   4c24	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:28:48 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'HAL_TIM_PeriodElapsedCallback':
+../Core/Src/main.c:678:34: error: 'fxas_addr' undeclared (first use in this function)
+  678 |         HAL_I2C_Mem_Read(&hi2c1, fxas_addr, 0x00, I2C_MEMADD_SIZE_8BIT, &status, 1, 100);
+      |                                  ^~~~~~~~~
+../Core/Src/main.c:678:34: note: each undeclared identifier is reported only once for each function it appears in
+../Core/Src/main.c:678:74: error: 'status' undeclared (first use in this function); did you mean 'ITStatus'?
+  678 |         HAL_I2C_Mem_Read(&hi2c1, fxas_addr, 0x00, I2C_MEMADD_SIZE_8BIT, &status, 1, 100);
+      |                                                                          ^~~~~~
+      |                                                                          ITStatus
+make: *** [Core/Src/subdir.mk:34: Core/Src/main.o] Error 1
+"make -j8 all" terminated with exit code 2. Build might be incomplete.
+17:29:22 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'HAL_TIM_PeriodElapsedCallback':
+../Core/Src/main.c:680:34: error: 'fxas_addr' undeclared (first use in this function)
+  680 |         HAL_I2C_Mem_Read(&hi2c1, fxas_addr, 0x00, I2C_MEMADD_SIZE_8BIT, &status, 1, 100);
+      |                                  ^~~~~~~~~
+../Core/Src/main.c:680:34: note: each undeclared identifier is reported only once for each function it appears in
+make: *** [Core/Src/subdir.mk:34: Core/Src/main.o] Error 1
+"make -j8 all" terminated with exit code 2. Build might be incomplete.
+17:29:46 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17756	     12	   1796	  19564	   4c6c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:36:04 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17728	     12	   1796	  19536	   4c50	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:56:21 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17772	     12	   1796	  19580	   4c7c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+17:59:18 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17800	     12	   1796	  19608	   4c98	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:13:29 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17680	     12	   1796	  19488	   4c20	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:26:54 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17680	     12	   1796	  19488	   4c20	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:27:53 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17684	     12	   1796	  19492	   4c24	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:28:21 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17684	     12	   1796	  19492	   4c24	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:28:57 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17684	     12	   1796	  19492	   4c24	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:31:35 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17692	     12	   1796	  19500	   4c2c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:32:28 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:33:41 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17692	     12	   1796	  19500	   4c2c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:34:23 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17692	     12	   1796	  19500	   4c2c	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:39:58 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:41:44 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:42:29 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:46:48 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:47:35 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:48:01 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:48:27 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:48:59 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:49:43 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:50:17 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:50:46 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:51:23 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:52:03 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+18:53:03 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17696	     12	   1796	  19504	   4c30	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+20:22:38 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17688	     12	   1796	  19496	   4c28	2D-Detumbling-ACS.elf
+Finished building: default.size.stdout
+ 
+Finished building: 2D-Detumbling-ACS.list
+ 
+20:35:47 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+make -j8 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m0 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F051x8 -c -I../Core/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc -I../Drivers/STM32F0xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "2D-Detumbling-ACS.elf" @"objects.list"   -mcpu=cortex-m0 -T"C:\Users\joest\uni\Einführung in die Elektronik der L und R\2D-Detumbling-ACS\STM32F051R8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="2D-Detumbling-ACS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: 2D-Detumbling-ACS.elf
+ 
+arm-none-eabi-size  2D-Detumbling-ACS.elf 
+arm-none-eabi-objdump -h -S 2D-Detumbling-ACS.elf  > "2D-Detumbling-ACS.list"
+   text	   data	    bss	    dec	    hex	filename
+  17684	     12	   1796	  19492	   4c24	2D-Detumbling-ACS.elf
 Finished building: default.size.stdout
  
 Finished building: 2D-Detumbling-ACS.list

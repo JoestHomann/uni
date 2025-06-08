@@ -8,10 +8,10 @@
 ../Core/Src/main.c:413:9:check_fxos8700	3
 ../Core/Src/main.c:432:9:check_fxas21002	3
 ../Core/Src/main.c:452:6:init_fxas21002	1
-../Core/Src/main.c:473:6:init_fxos8700	1
-../Core/Src/main.c:506:6:read_gyro	4
-../Core/Src/main.c:542:6:read_magnetometer	4
-../Core/Src/main.c:580:6:compute_torque	6
-../Core/Src/main.c:611:6:set_pwm	1
-../Core/Src/main.c:622:6:HAL_TIM_PeriodElapsedCallback	2
-../Core/Src/main.c:664:6:Error_Handler	1
+../Core/Src/main.c:478:6:init_fxos8700	1
+../Core/Src/main.c:511:6:read_gyro	4
+../Core/Src/main.c:547:6:read_magnetometer	4
+../Core/Src/main.c:585:6:compute_torque	6
+../Core/Src/main.c:616:6:set_pwm	1
+../Core/Src/main.c:627:6:HAL_TIM_PeriodElapsedCallback	6
+../Core/Src/main.c:660:6:Error_Handler	1

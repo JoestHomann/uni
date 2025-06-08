@@ -137,7 +137,7 @@ int main(void)
     blink_sos_pwm(&htim3, TIM_CHANNEL_4); // PC9: Fehler
   }
 
-  HAL_Delay(3000);  // 3 Sekunden Pause zwischen check
+  HAL_Delay(1000);  // 1 Sekunden Pause zwischen check
 
   if (check_fxos8700())
   {
@@ -456,17 +456,22 @@ void init_fxas21002(void)
     // 1. CTRL_REG1 = 0x0C → Standby, DR=100 Hz (011), ACTIVE=0
     uint8_t ctrl_reg1_standby = 0x0C;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_standby, 1, 100);
-    HAL_Delay(100);  // TSTBY→ACT ≈ 2/ODR + 1 ≈ 61 ms bei 100 Hz
+    HAL_Delay(100);
 
-    // 2. CTRL_REG0 = 0x00 → ±250 dps (FS1 = FS0 = 1)
-    uint8_t ctrl_reg0 = 0x03;  // Bit 1: FS0 = 1, Bit 0: FS1 = 1
+    // 2. CTRL_REG0 = 0x03 → ±250 dps (FS1 = FS0 = 1)
+    uint8_t ctrl_reg0 = 0x03;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
-    HAL_Delay(100);  // sicherheitshalber
+    HAL_Delay(100);
 
-    // 3. CTRL_REG1 = 0x2C → Aktiv (ACTIVE=1), DR=100 Hz (011)
+    // 3. CTRL_REG3 = 0x04 → INT_EN_DRDY = 1 (bit 2) aktivieren → ZYXDR wird gesetzt
+    uint8_t ctrl_reg3 = 0x04;
+    HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x15, I2C_MEMADD_SIZE_8BIT, &ctrl_reg3, 1, 100);
+    HAL_Delay(100);
+
+    // 4. CTRL_REG1 = 0x2C → Aktivieren: DR=100 Hz (011), ACTIVE=1
     uint8_t ctrl_reg1_active = 0x2C;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_active, 1, 100);
-    HAL_Delay(100);  // für stabile Aktivierung
+    HAL_Delay(100);
 }
 
 
@@ -503,43 +508,43 @@ void init_fxos8700(void)
 }
 
 
-void read_gyro(float* gyro_z)
+void read_gyro(float* gyro_z) // fxas21002
 {
     const uint8_t fxas_addr = 0x21 << 1;
     const uint8_t reg_status = 0x00;
-    const uint8_t reg_z_msb = 0x06;
+    const uint8_t reg_gyro_x_msb = 0x01;
 
     uint8_t status = 0;
-    uint8_t data[2] = {0};
-    int16_t raw_z = 0;
+    uint8_t data[6] = {0};  // X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
 
-    // Erst prüfen, ob neue Daten verfügbar sind
+    // Statusregister prüfen
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-        *gyro_z = 0.0f;
+        *gyro_z = 10.0f;
         return;
     }
 
-    // Bit 0: ZYXDR = 1 → neue Daten
+    // Nur wenn neue Daten vorhanden
     if ((status & 0x01) == 0)
     {
-        *gyro_z = 0.0f;  // keine neuen Daten
+        *gyro_z = 10.0f;
         return;
     }
 
-    // Zwei Bytes Z-Achse lesen (MSB @ 0x06, LSB @ 0x07)
-    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_z_msb, I2C_MEMADD_SIZE_8BIT, data, 2, 100) != HAL_OK)
+    // Alle 6 Bytes lesen (X, Y, Z)
+    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-        *gyro_z = 0.0f;
+        *gyro_z = 10.0f;
         return;
     }
 
-    raw_z = (int16_t)((data[0] << 8) | data[1]);
+    // Z-Daten extrahieren (Byte 4 und 5)
+    int16_t raw_z = (int16_t)((data[4] << 8) | data[5]);
     *gyro_z = raw_z * 0.0078125f;  // 7.8125 mdps/LSB = 0.0078125 dps/LSB
 }
 
 
-void read_magnetometer(int16_t* mag_x, int16_t* mag_z)
+void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
 {
     const uint8_t fxos_addr = 0x1F << 1;
     const uint8_t reg_status = 0x00;
@@ -625,35 +630,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
         float gyro_z = 0;
         int16_t mag_x = 0, mag_z = 0;
-        uint8_t pwm_x = 50, pwm_y = 50;
 
-        // 1. Sensorwerte auslesen
         read_gyro(&gyro_z);
         read_magnetometer(&mag_x, &mag_z);
 
-        // 2. Moment berechnen und PWM-Werte bestimmen
-        compute_torque(gyro_z, mag_x, mag_z, &pwm_x, &pwm_y);
+        // Mapping-Skalierung anpassen, falls LEDs dauerhaft bei 0% oder 100% sind
+        int pwm_gyro = (int)(gyro_z * 1.0f + 256.0f);   // z. B. ±33.3 deg/s → 0–100
+        int pwm_magx = (int)(mag_x / 100.0f + 20.0f);  // z. B. ±5000 LSB → 0–100
 
-        // 3. PWM setzen
-        set_pwm(pwm_x, pwm_y);
+        // Begrenzung auf gültigen Bereich
+        if (pwm_gyro < 0) pwm_gyro = 0;
+        if (pwm_gyro > 100) pwm_gyro = 100;
+        if (pwm_magx < 0) pwm_magx = 0;
+        if (pwm_magx > 100) pwm_magx = 100;
+
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm_gyro);   // PC8: Gyro Z
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwm_magx);   // PC9: Mag X
     }
 }
 
 
-/*
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (htim->Instance == TIM14)
-    {
-        // LED flackern lassen, z. B. Helligkeit oszillieren
-        static uint8_t val = 0;
-        val = (val + 10) % 100;
-
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, val);
-        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 100 - val);
-    }
-}
-*/
 
 /* USER CODE END 4 */
 
