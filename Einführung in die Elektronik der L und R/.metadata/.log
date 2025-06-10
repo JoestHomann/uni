@@ -1843,3 +1843,69 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64
 
 !ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 12:47:15.357
 !MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Drivers\STM32F0xx_HAL_Driver\Src\stm32f0xx_hal.c
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 12:53:46.424
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.core 1 0 2025-06-10 12:55:37.384
+!MESSAGE Indexed 'Blue_Switch_test' (19 sources, 81 headers) in 1.66 sec: 4,146 declarations; 23,152 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0073%)
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 13:43:12.004
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 13:43:46.138
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Src\stm32f0xx_hal_msp.c
+!SESSION 2025-06-10 14:02:00.732 -----------------------------------------------
+eclipse.buildId=Version 1.18.1
+java.version=21.0.3
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_GB
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2025-06-10 14:02:21.790
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2025-06-10 14:02:21.793
+!MESSAGE Log4j2 initialized with config file C:\Users\joest\uni\Einführung in die Elektronik der L und R\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2025-06-10 14:02:35.896
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 15:46:54.025
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 15:54:45.458
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 15:56:56.209
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:02:07.399
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:12:25.800
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:20:37.439
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:21:34.604
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:45:09.639
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:46:54.413
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:57:49.344
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Drivers\CMSIS\Include\core_cm0.h
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 16:58:38.567
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 17:03:04.649
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Src\stm32f0xx_hal_msp.c
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-10 17:16:30.631
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s

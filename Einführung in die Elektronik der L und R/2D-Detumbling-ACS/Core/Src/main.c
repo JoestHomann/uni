@@ -155,57 +155,46 @@ int main(void)
   init_fxos8700();
 
   // DEBUG
+/*
   while (1)
   {
-      GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-      if (state == GPIO_PIN_SET)
-          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);  // HIGH = aus
-      else
-          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);    // LOW = an
+      GPIO_PinState state = HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin);
+      if (state == GPIO_PIN_SET){
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);  // HIGH = an
+          HAL_Delay(500);
+      }else{
+          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);    // LOW = aus
+          HAL_Delay(500);
 
       HAL_Delay(100);
+      }
   }
+*/
   // DEBUG
 
   // Blue Switch
-  // Phase: Warte auf Taster-Drücken UND Loslassen
-  uint8_t taster_freigegeben = 0;
-  uint32_t entprell_delay_ms = 20;
 
-  while (!taster_freigegeben)
-  {
-      // Warte auf Drücken (Low)
-      if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-      {
-          HAL_Delay(entprell_delay_ms);
-          if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-          {
-              // Gedrückt bestätigt
-              // Jetzt warte auf Loslassen (High)
-              while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-              {
-                  // Optional LED blinken während gedrückt gehalten
-                  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);
-                  HAL_Delay(50);
-                  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
-                  HAL_Delay(50);
-              }
-
-              // Entprellen Loslassen
-              HAL_Delay(entprell_delay_ms);
-              if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
-              {
-                  taster_freigegeben = 1;
-              }
-          }
-      }
-
-      // Optional: Animation während auf Drücken gewartet wird
+  // 1. Warte auf Drücken (LOW)
+  while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_RESET) {
+      // Animation: LED oszilliert, solange nicht gedrückt
       static uint8_t val = 0;
       val = (val + 5) % 100;
       __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, val);
-      HAL_Delay(30);
+      HAL_Delay(50);
   }
+  // Entprellen nach Drücken
+  HAL_Delay(50);
+
+  // 2. Warte auf Loslassen (HIGH)
+  while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_SET) {
+      // Animation: LED blinkt schneller, solange gedrückt
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);
+      HAL_Delay(50);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+      HAL_Delay(50);
+  }
+  // Entprellen nach Loslassen
+  HAL_Delay(50);
 
   // Jetzt startet die Regelung
   HAL_TIM_Base_Start_IT(&htim14);
@@ -420,7 +409,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : blue_switch_Pin */
   GPIO_InitStruct.Pin = blue_switch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(blue_switch_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -653,8 +642,8 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
     float m_y =  K * gyro_z * (float)mag_x;
 
     // 3) Umrechnung auf PWM-Werte (0-100)
-    int    p_x = (int)(50.0f + m_x * 0.1f);
-    int    p_y = (int)(50.0f + m_y * 0.1f);
+    int p_x = (int)(50.0f + m_x * 0.1f);
+    int p_y = (int)(50.0f + m_y * 0.7f);
 
     // clamp
     p_x = p_x<0 ? 0 : (p_x>100 ? 100 : p_x);
