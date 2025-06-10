@@ -154,61 +154,32 @@ int main(void)
   init_fxas21002();
   init_fxos8700();
 
-  // DEBUG
-  while (1)
-  {
-      GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-      if (state == GPIO_PIN_SET)
-          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);  // HIGH = aus
-      else
-          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);    // LOW = an
-
-      HAL_Delay(100);
-  }
-  // DEBUG
-
   // Blue Switch
-  // Phase: Warte auf Taster-Drücken UND Loslassen
-  uint8_t taster_freigegeben = 0;
-  uint32_t entprell_delay_ms = 20;
+  // Annahme: Taster zieht den Pin beim Drücken auf GND (Pull-Up aktiviert)
+  //  → ungedrückt:     HAL_GPIO_ReadPin(...) == GPIO_PIN_SET
+  //  → gedrückt/geschlossen: HAL_GPIO_ReadPin(...) == GPIO_PIN_RESET
 
-  while (!taster_freigegeben)
+  // 1) Warten, bis der Switch (z. B. durch Kabel‐Trennung) geöffnet wird = losgelassen
+  while ( HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin)
+          == GPIO_PIN_RESET )
   {
-      // Warte auf Drücken (Low)
-      if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-      {
-          HAL_Delay(entprell_delay_ms);
-          if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-          {
-              // Gedrückt bestätigt
-              // Jetzt warte auf Loslassen (High)
-              while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-              {
-                  // Optional LED blinken während gedrückt gehalten
-                  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);
-                  HAL_Delay(50);
-                  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
-                  HAL_Delay(50);
-              }
-
-              // Entprellen Loslassen
-              HAL_Delay(entprell_delay_ms);
-              if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
-              {
-                  taster_freigegeben = 1;
-              }
-          }
-      }
-
-      // Optional: Animation während auf Drücken gewartet wird
-      static uint8_t val = 0;
-      val = (val + 5) % 100;
-      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, val);
-      HAL_Delay(30);
+      // Optional: Status‐LED oder PWM‐SOS hier anzeigen
   }
+  // 2) Kurzes Delay zum Entprellen
+  HAL_Delay(20);
 
-  // Jetzt startet die Regelung
-  HAL_TIM_Base_Start_IT(&htim14);
+  // 3) Nochmal prüfen, ob er wirklich offen ist
+  if ( HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin)
+       == GPIO_PIN_SET )
+  {
+      // 4) Jetzt kann die eigentliche Regelung starten
+      HAL_TIM_Base_Start_IT(&htim14);
+  }
+  else
+  {
+	  blink_sos_pwm(&htim3, TIM_CHANNEL_3); // PC8
+  }
+  //JH Startet 10 Hz-Regeltakt
 
   /* USER CODE END 2 */
 

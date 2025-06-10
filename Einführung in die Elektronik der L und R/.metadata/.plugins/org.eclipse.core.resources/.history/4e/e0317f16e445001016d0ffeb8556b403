@@ -154,60 +154,27 @@ int main(void)
   init_fxas21002();
   init_fxos8700();
 
-  // DEBUG
+  // Blue Switch
+  // Warten auf Loslassen des Buttons mit sicherem Entprellen
   while (1)
   {
-      GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-      if (state == GPIO_PIN_SET)
-          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);  // HIGH = aus
-      else
-          __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);    // LOW = an
-
-      HAL_Delay(100);
-  }
-  // DEBUG
-
-  // Blue Switch
-  // Phase: Warte auf Taster-Drücken UND Loslassen
-  uint8_t taster_freigegeben = 0;
-  uint32_t entprell_delay_ms = 20;
-
-  while (!taster_freigegeben)
-  {
-      // Warte auf Drücken (Low)
-      if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
+      if (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_SET)
       {
-          HAL_Delay(entprell_delay_ms);
-          if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
+          HAL_Delay(10);  // kurze Entprellzeit
+          if (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_SET)
           {
-              // Gedrückt bestätigt
-              // Jetzt warte auf Loslassen (High)
-              while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_RESET)
-              {
-                  // Optional LED blinken während gedrückt gehalten
-                  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 100);
-                  HAL_Delay(50);
-                  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
-                  HAL_Delay(50);
-              }
-
-              // Entprellen Loslassen
-              HAL_Delay(entprell_delay_ms);
-              if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0) == GPIO_PIN_SET)
-              {
-                  taster_freigegeben = 1;
-              }
+              break;  // wirklich losgelassen
           }
       }
 
-      // Optional: Animation während auf Drücken gewartet wird
-      static uint8_t val = 0;
-      val = (val + 5) % 100;
-      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, val);
-      HAL_Delay(30);
+      // LED oszillieren lassen auf PC8 während gewartet wird
+      static uint8_t t = 0;
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, (t % 100));
+      t += 5;
+      HAL_Delay(20);
   }
 
-  // Jetzt startet die Regelung
+  //JH Startet 10 Hz-Regeltakt
   HAL_TIM_Base_Start_IT(&htim14);
 
   /* USER CODE END 2 */
