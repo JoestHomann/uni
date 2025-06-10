@@ -77,7 +77,7 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z);
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y);
 
 // Sleep function
-void handle_sleep_logic(float gyro_z);
+void handle_sleep_logic(float gyro_z)
 
 // Output functions
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y);
@@ -675,6 +675,7 @@ void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
 }
 
 
+
 static uint16_t quietCounter = 0;
 static uint8_t isSleeping = 0;
 
@@ -719,7 +720,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             set_pwm(pwm_x, pwm_y);
         } else {
             // Im Schlafmodus optional PWM abschalten oder "Parkwert" setzen
-            set_pwm(1, 1); // Idle/neutral
+            set_pwm(50, 50); // Idle/neutral
         }
     }
 }

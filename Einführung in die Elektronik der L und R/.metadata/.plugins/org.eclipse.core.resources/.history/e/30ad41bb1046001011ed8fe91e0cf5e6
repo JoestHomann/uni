@@ -24,6 +24,7 @@
 
 #include <math.h>  // für fabsf()
 #include <stdint.h>
+#include "stm32f0xx_hal_pwr.h"
 
 /* USER CODE END Includes */
 
@@ -69,15 +70,12 @@ void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);
 void init_fxas21002(void);
 void init_fxos8700(void);
 
-// Read sensors function
+// read sensors function
 void read_gyro(float* gyro_z);
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z);
 
 // Calculation functions
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y);
-
-// Sleep function
-void handle_sleep_logic(float gyro_z);
 
 // Output functions
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y);
@@ -209,13 +207,6 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
-
-	  // CPU in den Sleep-Modus schicken
-	  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-	  // Hierhin kehrt der Code NUR zurück, wenn ein Interrupt (z. B. Timer) ausgelöst wurde.
-	  // Regeltakt arbeitet dann im Interrupt-Handler weiter (HAL_TIM_PeriodElapsedCallback)
-
 
     /* USER CODE BEGIN 3 */
   }
@@ -419,11 +410,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : blue_switch_Pin */
   GPIO_InitStruct.Pin = blue_switch_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(blue_switch_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
-  	  	  // GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
@@ -634,7 +625,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     *mag_z = (int16_t)((data[4] << 8) | data[5]) >> 2;
 }
 
-
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
 {
     // 1) Schwellwert gegen Rauschen
@@ -675,55 +665,52 @@ void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
 }
 
 
-static uint16_t quietCounter = 0;
-static uint8_t isSleeping = 0;
-
-void handle_sleep_logic(float gyro_z)
-{
-    if (!isSleeping) {
-        if (fabsf(gyro_z) < 1.0f) {
-            quietCounter++;
-            if (quietCounter >= 50) { // 5 s bei 10 Hz
-                isSleeping = 1;
-            }
-        } else {
-            quietCounter = 0;
-        }
-    } else {
-        if (fabsf(gyro_z) > 2.0f) {
-            isSleeping = 0;
-            quietCounter = 0;
-        }
-    }
-}
-
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if (htim->Instance == TIM14)
     {
-        float gyro_z = 0.0f;
-        int16_t mag_x = 0, mag_z = 0;
+        float   gyro_z = 0.0f;
+        int16_t mag_x  = 0, mag_z = 0;
         uint8_t pwm_x = 0, pwm_y = 0;
 
         // 1) Sensoren auslesen
         read_gyro(&gyro_z);
         read_magnetometer(&mag_x, &mag_z);
 
-        // 2) Schlaflogik prüfen und ggf. Status wechseln
-        handle_sleep_logic(gyro_z);
+        // 2) Berechne das Gegendrehmoment und erhalte zwei PWM-Werte
+        compute_torque(gyro_z, mag_x, mag_z, &pwm_x, &pwm_y);
 
-        if (!isSleeping) {
-            // 3) Nur wenn wach, PWM berechnen und setzen
-            compute_torque(gyro_z, mag_x, mag_z, &pwm_x, &pwm_y);
-            set_pwm(pwm_x, pwm_y);
-        } else {
-            // Im Schlafmodus optional PWM abschalten oder "Parkwert" setzen
-            set_pwm(1, 1); // Idle/neutral
-        }
+        // 3) Setze die PWM (PC9 = X-Achse, PC8 = Y-Achse)
+        set_pwm(pwm_x, pwm_y);
     }
 }
 
+/*
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (htim->Instance == TIM14)
+    {
+        float gyro_z = 0;
+        int16_t mag_x = 0, mag_z = 0;
+
+        read_gyro(&gyro_z);
+        read_magnetometer(&mag_x, &mag_z);
+
+        // Mapping-Skalierung anpassen, falls LEDs dauerhaft bei 0% oder 100% sind
+        int pwm_gyro = (int)(gyro_z * 0.5f + 50.0f);   // z. B. ±33.3 deg/s → 0–100
+        int pwm_magx = (int)(mag_x / 100.0f + 50.0f);  // z. B. ±5000 LSB → 0–100
+
+        // Begrenzung auf gültigen Bereich
+        if (pwm_gyro < 0) pwm_gyro = 0;
+        if (pwm_gyro > 100) pwm_gyro = 100;
+        if (pwm_magx < 0) pwm_magx = 0;
+        if (pwm_magx > 100) pwm_magx = 100;
+
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm_gyro);   // PC8: Gyro Z
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwm_magx);   // PC9: Mag X
+    }
+}
+*/
 
 
 /* USER CODE END 4 */

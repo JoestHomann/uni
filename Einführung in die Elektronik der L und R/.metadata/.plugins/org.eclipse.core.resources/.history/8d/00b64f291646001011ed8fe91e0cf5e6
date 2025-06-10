@@ -719,7 +719,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             set_pwm(pwm_x, pwm_y);
         } else {
             // Im Schlafmodus optional PWM abschalten oder "Parkwert" setzen
-            set_pwm(1, 1); // Idle/neutral
+            set_pwm(50, 50); // Idle/neutral
         }
     }
 }
