@@ -1945,3 +1945,18 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64
 
 !ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-11 13:38:36.661
 !MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-11 16:04:25.767
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-11 21:15:17.180
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-11 21:40:34.361
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-11 21:57:26.506
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Src\stm32f0xx_it.c
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-06-11 21:58:26.928
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s

@@ -79,7 +79,7 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
-TIM_HandleTypeDef PWM_TIMER;
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim14;
 
 /* USER CODE BEGIN PV */
@@ -133,7 +133,7 @@ void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);		// Modulates bri
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 extern TIM_HandleTypeDef htim14;
-extern TIM_HandleTypeDef PWM_TIMER;
+extern TIM_HandleTypeDef htim3;
 /* USER CODE END 0 */
 
 /**
@@ -171,35 +171,35 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Start PWM on green and blue LED
-  HAL_TIM_PWM_Start(&PWM_TIMER, PWM_BLUE_LED);
-  HAL_TIM_PWM_Start(&PWM_TIMER, PWM_GREEN_LED);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
 
   // Check, if who_am_i register of the sensors returns the correct value and blink accordingly
   if (check_gyro())
   {
-    blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Check successful
+    blink_sos_pwm(&htim3, TIM_CHANNEL_3); // Check successful
   }
   else
   {
-    blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED); // Check failed
+    blink_sos_pwm(&htim3, TIM_CHANNEL_4); // Check failed
   }
 
   HAL_Delay(1000);  // Pause to make checks visually distinguishable
 
   if (check_magnetometer())
   {
-    blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Check successful
+    blink_sos_pwm(&htim3, TIM_CHANNEL_3); // Check successful
   }
   else
   {
-    blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED); // Check failed
+    blink_sos_pwm(&htim3, TIM_CHANNEL_4); // Check failed
   }
 
   HAL_Delay(1000);  // Pause to make checks visually distinguishable
 
   // Sensor initialisations
-  init_gyro();				// Initialisation of control registers of the gyroscope (FXAS21002C)
+  init_gyro();		// Initialisation of control registers of the gyroscope (FXAS21002C)
   init_magnetometer();		// Initialisation of control registers of the magnetometer (FXOS8700CQ)
 
 
@@ -210,7 +210,7 @@ int main(void)
       // Blue LED oscillates slowly while waiting on press
       static uint8_t val = 0;
       val = (val + 5) % 100;
-      __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, val);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, val);
       HAL_Delay(50);
   }
 
@@ -220,9 +220,9 @@ int main(void)
   // Wait for release of the blue switch (HIGH)
   while (HAL_GPIO_ReadPin(blue_switch_GPIO_Port, blue_switch_Pin) == GPIO_PIN_SET) {
 	  // Blue LED blinks intensely while waiting on release
-      __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, PWM_MAX);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, PWM_MAX);
       HAL_Delay(50);
-      __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, PWM_MIN);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, PWM_MIN);
       HAL_Delay(50);
   }
 
@@ -381,19 +381,19 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 1 */
 
   /* USER CODE END TIM3_Init 1 */
-  PWM_TIMER.Instance = TIM3;
-  PWM_TIMER.Init.Prescaler = 479;
-  PWM_TIMER.Init.CounterMode = TIM_COUNTERMODE_UP;
-  PWM_TIMER.Init.Period = 100;
-  PWM_TIMER.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  PWM_TIMER.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_PWM_Init(&PWM_TIMER) != HAL_OK)
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 479;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 100;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&PWM_TIMER, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -401,18 +401,18 @@ static void MX_TIM3_Init(void)
   sConfigOC.Pulse = 50;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&PWM_TIMER, &sConfigOC, PWM_BLUE_LED) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&PWM_TIMER, &sConfigOC, PWM_GREEN_LED) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&PWM_TIMER);
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 
@@ -646,8 +646,6 @@ void read_gyro(float* gyro_z) // FXAS21002C
     // Read the STATUS register to check if new data is available
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *gyro_z = 0.0f;		// I2C read failed
         return;
     }
@@ -662,8 +660,6 @@ void read_gyro(float* gyro_z) // FXAS21002C
     // Read 6 bytes of gyro data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *gyro_z = 0.0f;		// I2C read failed
         return;
     }
@@ -691,8 +687,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     // Read the STATUS register to check if new data is available
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *mag_x = 0;
         *mag_z = 0;
         return;		// I2C read failed
@@ -709,8 +703,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     // Read 6 bytes of magnetometer data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *mag_x = 0;
         *mag_z = 0;
         return;		// I2C read failed
@@ -758,10 +750,10 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
 {
 	// Set the PWM value for the X axis (connected to PC9, TIM3 Channel 4)
-    __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_GREEN_LED, pwm_x);
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwm_x);
 
     // Set the PWM value for the Y axis (connected to PC8, TIM3 Channel 3)
-    __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, pwm_y);
+    __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm_y);
 }
 
 

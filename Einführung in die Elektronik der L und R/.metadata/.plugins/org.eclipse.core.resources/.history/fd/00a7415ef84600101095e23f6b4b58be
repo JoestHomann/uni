@@ -386,14 +386,14 @@ static void MX_TIM3_Init(void)
   PWM_TIMER.Init.CounterMode = TIM_COUNTERMODE_UP;
   PWM_TIMER.Init.Period = 100;
   PWM_TIMER.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  PWM_TIMER.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_PWM_Init(&PWM_TIMER) != HAL_OK)
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&PWM_TIMER, &sMasterConfig) != HAL_OK)
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
@@ -401,18 +401,18 @@ static void MX_TIM3_Init(void)
   sConfigOC.Pulse = 50;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&PWM_TIMER, &sConfigOC, PWM_BLUE_LED) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, PWM_BLUE_LED) != HAL_OK)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&PWM_TIMER, &sConfigOC, PWM_GREEN_LED) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, PWM_GREEN_LED) != HAL_OK)
   {
     Error_Handler();
   }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&PWM_TIMER);
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 
@@ -646,8 +646,6 @@ void read_gyro(float* gyro_z) // FXAS21002C
     // Read the STATUS register to check if new data is available
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *gyro_z = 0.0f;		// I2C read failed
         return;
     }
@@ -662,8 +660,6 @@ void read_gyro(float* gyro_z) // FXAS21002C
     // Read 6 bytes of gyro data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *gyro_z = 0.0f;		// I2C read failed
         return;
     }
@@ -691,8 +687,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     // Read the STATUS register to check if new data is available
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *mag_x = 0;
         *mag_z = 0;
         return;		// I2C read failed
@@ -709,8 +703,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     // Read 6 bytes of magnetometer data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *mag_x = 0;
         *mag_z = 0;
         return;		// I2C read failed
