@@ -675,110 +675,97 @@ void read_gyro(float* gyro_z) // FXAS21002C
 }
 
 
-// Reads the X and Z components of the magnetic field from the FXOS8700 sensor via I2C
-// Stores the 14-bit signed values in mag_x and mag_z (LSB units)
-// Sets both to 0 if no new data is available or if a communication error occurs
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
 {
-    const uint8_t fxos_addr = 0x1F << 1;	// I2C address of FXOS8700 (SA0 = HIGH)
-    const uint8_t reg_status = 0x00;		// Address of the STATUS register
-    const uint8_t reg_mag_x_msb = 0x33;		// Address of the first magnetometer data register (X_MSB)
+    const uint8_t fxos_addr = 0x1F << 1;
+    const uint8_t reg_status = 0x00;
+    const uint8_t reg_mag_x_msb = 0x33;
 
-    uint8_t status = 0;			// Variable to store the STATUS register value
-    uint8_t data[6] = {0};  	// Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
+    uint8_t status = 0;
+    uint8_t data[6] = {0};  // X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
 
-    // Read the STATUS register to check if new data is available
+    // Optional: STATUS-Register abfragen (nicht zwingend nötig bei kontinuierlichem Lesen)
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
         *mag_x = 0;
         *mag_z = 0;
-        return;		// I2C read failed
+        return;
     }
 
-    // Check if new magnetometer data for all axes is available (ZYXDR bit, bit 3 must be set)
+    // Bit 3: ZYXDR = 1 → neue XYZ-Daten verfügbar
     if ((status & 0x08) == 0)
     {
         *mag_x = 0;
         *mag_z = 0;
-        return;		// No new data available
+        return;
     }
 
-    // Read 6 bytes of magnetometer data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
+    // 6 Bytes ab 0x33 (X, Y, Z) lesen
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
         *mag_x = 0;
         *mag_z = 0;
-        return;		// I2C read failed
+        return;
     }
 
-    // Combine MSB and LSB to get the raw 14-bit value (signed, left-justified; shift right by 2 bits)
+    // 14-bit linksbündig → rechts shiften um 2 Bits
     *mag_x = (int16_t)((data[0] << 8) | data[1]) >> 2;
     *mag_z = (int16_t)((data[4] << 8) | data[5]) >> 2;
 }
 
-// Calculates the required control torque (PWM values) based on measured gyro and magnetic field data
-// Implements a simple cross-product control law for 2D detumbling and outputs clamped PWM values (0-100)
+
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
 {
-	// Noise threshold: If gyro rate is below the threshold, set PWM to neutral (no actuation)
-    const float threshold = 1.0f;  		// [deg/s] minimum rate to overcome noise
-
+    // 1) Schwellwert gegen Rauschen
+    const float threshold = 1.0f;  // in °/s
     if (fabsf(gyro_z) < threshold) {
-        *pwm_x = PWM_NEUTRAL;  // Set both axes to idle/neutral (no torque)
+        *pwm_x = PWM_NEUTRAL;  // Idle-Level (keine Dämpfung)
         *pwm_y = PWM_NEUTRAL;
         return;
     }
 
-    // Control law: m = –K * (omega × B)
-    // For 2D: omega = [0,0,omega_z], B = [B_x,0,B_z]
-    // omega x B = [ –omega_z*B_z, omega_z*B_x, 0 ]^T
-    const float K = 0.04f;  					// Control gain, can be tuned for system response
-    float m_x = -K * gyro_z * (float)mag_z;		// Control effort in X
-    float m_y =  K * gyro_z * (float)mag_x;		// Control effort in Y
+    // 2) Control-Law: m = –K * (ω × B)
+    //    Für 2D mit ω = [0,0,ωz], B = [Bx,0,Bz]:
+    //    ω×B = [ –ωz·Bz, ωz·Bx, 0 ]
+    const float K = 0.04f;  // einstellbarer Verstärkungsfaktor
+    float m_x = -K * gyro_z * (float)mag_z;
+    float m_y =  K * gyro_z * (float)mag_x;
 
-    // Convert control efforts to PWM values (0-100, center at 50)
-    int p_x = (int)(50.0f + m_x * 0.1f);		// Scale and offset for X channel
-    int p_y = (int)(50.0f + m_y * 0.7f);		// Scale and offset for Y channel
+    // 3) Umrechnung auf PWM-Werte (0-100)
+    int p_x = (int)(50.0f + m_x * 0.1f);
+    int p_y = (int)(50.0f + m_y * 0.7f);
 
-    // Limit PWM values to valid range (0-100)
+    // clamp
     p_x = p_x<0 ? 0 : (p_x>100 ? 100 : p_x);
     p_y = p_y<0 ? 0 : (p_y>100 ? 100 : p_y);
 
-    // Output final values
     *pwm_x = (uint8_t)p_x;
     *pwm_y = (uint8_t)p_y;
 }
 
-// Sets the PWM output values for the X and Y channels (green LED (PC9) and blue LED (PC8))
+
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
 {
-	// Set the PWM value for the X axis (connected to PC9, TIM3 Channel 4)
+    // PWM setzen auf PC9 (X)
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwm_x);
 
-    // Set the PWM value for the Y axis (connected to PC8, TIM3 Channel 3)
+    // PWM setzen auf PC8 (Y)
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm_y);
 }
 
 
-// Handles the sleep and wakeup logic based on the current rotational rate (gyro_z)
-// If the absolute gyro_z stays below SLEEP_THRESHOLD for IDLE_CYCLES, the system enters sleep mode (isSleeping = 1)
-// If, during sleep, gyro_z exceeds WAKEUP_THRESHOLD, the system wakes up
 void handle_sleep_logic(float gyro_z)
 {
     if (!isSleeping) {
-    	// If not sleeping, check if rotational rate is below the threshold
         if (fabsf(gyro_z) < SLEEP_THRESHOLD) {
             quietCounter++;
-            // If below SLEEP_THRESHOLD long enough (IDLE_CYCLES), enter sleep mode
-            if (quietCounter >= IDLE_CYCLES) {
+            if (quietCounter >= IDLE_CYCLES) { // 5 s bei 10 Hz
                 isSleeping = 1;
             }
         } else {
-        	// If movement above SLEEP_THRESHOLD detected, reset counter
             quietCounter = 0;
         }
     } else {
-    	// If currently sleeping, check for movement above WAKEUP_THRESHOLD to wake up
         if (fabsf(gyro_z) > WAKEUP_THRESHOLD) {
             isSleeping = 0;
             quietCounter = 0;
@@ -787,13 +774,10 @@ void handle_sleep_logic(float gyro_z)
 }
 
 
-// Timer interrupt callback function for STM32 HAL
-// This function is called automatically whenever the timer (here TIM14) elapses
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	// Check if the interrupt comes from TIM14 (the control loop timer)
     if (htim->Instance == TIM14)
-        do_control = 1;		// Set flag to indicate that a control cycle should be performed in the main loop
+        do_control = 1;
 }
 
 

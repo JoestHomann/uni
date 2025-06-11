@@ -749,36 +749,29 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
     *pwm_y = (uint8_t)p_y;
 }
 
-// Sets the PWM output values for the X and Y channels (green LED (PC9) and blue LED (PC8))
+
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
 {
-	// Set the PWM value for the X axis (connected to PC9, TIM3 Channel 4)
+    // PWM setzen auf PC9 (X)
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwm_x);
 
-    // Set the PWM value for the Y axis (connected to PC8, TIM3 Channel 3)
+    // PWM setzen auf PC8 (Y)
     __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwm_y);
 }
 
 
-// Handles the sleep and wakeup logic based on the current rotational rate (gyro_z)
-// If the absolute gyro_z stays below SLEEP_THRESHOLD for IDLE_CYCLES, the system enters sleep mode (isSleeping = 1)
-// If, during sleep, gyro_z exceeds WAKEUP_THRESHOLD, the system wakes up
 void handle_sleep_logic(float gyro_z)
 {
     if (!isSleeping) {
-    	// If not sleeping, check if rotational rate is below the threshold
         if (fabsf(gyro_z) < SLEEP_THRESHOLD) {
             quietCounter++;
-            // If below SLEEP_THRESHOLD long enough (IDLE_CYCLES), enter sleep mode
-            if (quietCounter >= IDLE_CYCLES) {
+            if (quietCounter >= IDLE_CYCLES) { // 5 s bei 10 Hz
                 isSleeping = 1;
             }
         } else {
-        	// If movement above SLEEP_THRESHOLD detected, reset counter
             quietCounter = 0;
         }
     } else {
-    	// If currently sleeping, check for movement above WAKEUP_THRESHOLD to wake up
         if (fabsf(gyro_z) > WAKEUP_THRESHOLD) {
             isSleeping = 0;
             quietCounter = 0;
@@ -787,13 +780,10 @@ void handle_sleep_logic(float gyro_z)
 }
 
 
-// Timer interrupt callback function for STM32 HAL
-// This function is called automatically whenever the timer (here TIM14) elapses
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	// Check if the interrupt comes from TIM14 (the control loop timer)
     if (htim->Instance == TIM14)
-        do_control = 1;		// Set flag to indicate that a control cycle should be performed in the main loop
+        do_control = 1;
 }
 
 
