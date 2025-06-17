@@ -86,7 +86,7 @@ TIM_HandleTypeDef htim14;
 
 volatile 	uint8_t 	do_control = 0;		// Timer interrupt flag for control cycle
 static 		uint8_t 	isSleeping = 0;		// Sleep flag
-static 		uint16_t 	quietCounter = 0;	// If value reaches IDLE_CYCLES value enter sleep mode
+static 		uint16_t 	quietCounter = 0;	// If quietCounter value reaches IDLE_CYCLES value enter sleep mode
 
 /* USER CODE END PV */
 
@@ -185,7 +185,7 @@ int main(void)
     blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED); // Check failed
   }
 
-  HAL_Delay(1000);  // Pause to make checks visually distinguishable
+  HAL_Delay(2000);  // Pause to make checks visually distinguishable
 
   if (check_magnetometer())
   {
