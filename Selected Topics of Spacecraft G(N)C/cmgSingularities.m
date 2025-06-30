@@ -27,7 +27,7 @@ nSurfs = size(cGrid,3);	% number of singular surfaces
 for iSurf = 1:1:nSurfs
 	C = squeeze(cGrid(:,:,iSurf));
 	disp(['Projection of c-vectors on singular direction for surface ',int2str(iSurf),':'])
-	singProj = C'*singDir
+	singProj = C'*singDir;
 	if any(abs(singProj)>1e-10)
 		warning('not singular?!');
 	end
