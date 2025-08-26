@@ -26,7 +26,7 @@
   *
   * Usage:
   *   1. Power on the system.
-  *   2. Press and release the blue button to arm/start the controller.
+  *   2. Press and release the blue button to start the controller.
   *   3. The system will automatically run the detumbling control loop, enter sleep
   *      mode as needed, and wake on new motion.
   *
@@ -120,9 +120,17 @@ void handle_sleep_logic(float gyro_z);			// Implements sleep logic with IDLE_CYC
 // PWM function
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y);		// Modulates brightness of green LED (pwm_x) and blue LED (pwm_y) with given value (0-100%)
 
-// Other functions
+// LED blink function
 void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);		// Modulates brightness of given LED with "S-O-S"
 
+// Timer-rate function
+static inline void ctrl_timer_set_rate_hz(uint32_t hz);
+
+//
+static inline void fxas_active(uint8_t on);
+
+//
+static inline void fxos_active(uint8_t on);
 
 // Note:
 // For further information on the functions' behaviour see the function declaration in /* USER CODE BEGIN 4 */
@@ -228,7 +236,7 @@ int main(void)
 
 
   // Start control cycle timer interrupt
-  HAL_TIM_Base_Start_IT(&htim14);
+  ctrl_timer_set_rate_hz(10);   // 10 Hz control loop frequency when active
 
   /* USER CODE END 2 */
 
@@ -238,10 +246,18 @@ int main(void)
 		if (do_control)	// If the timer-interrupt-flag is set (true = 1), start the control cycle
 		{
 			do_control = 0;	// Reset flag
+
 			// Initialise local variables for current sensor readings and PWM outputs
 			float gyro_z = 0.0f;
 			int16_t mag_x = 0, mag_z = 0;
 			uint8_t pwm_x = 0, pwm_y = 0;
+
+			if (isSleeping) {
+			    // Activate sensors and read data when sleeping to check viability of sleeping
+			    fxas_active(1);
+			    fxos_active(1);
+			    HAL_Delay(5);   // Settling-delay
+			}
 
 			// Read values from gyroscope (FXAS21002C) and magnetometer (FXOS8700CQ)
 			read_gyro(&gyro_z);
@@ -249,6 +265,26 @@ int main(void)
 
 			// Evaluate sleep logic (set isSleeping-flag if necessary conditions are met)
 			handle_sleep_logic(gyro_z);
+
+			static uint8_t prevSleeping = 0;
+			if (isSleeping != prevSleeping) {
+				prevSleeping = isSleeping;
+				if (isSleeping) {
+					fxas_active(0);          // Change sensor state to ready
+					fxos_active(0);
+					ctrl_timer_set_rate_hz(1);   // 1 Hz while sleeping
+					set_pwm(PWM_SLEEP, PWM_SLEEP);
+				} else {
+					fxas_active(1);          // Change sensor state to active
+					fxos_active(1);
+					ctrl_timer_set_rate_hz(10); // Change timer rate to 10 Hz (active control rate)
+				}
+			}
+
+			if (isSleeping) {
+				fxas_active(0);  // Change sensor state to ready when sleeping
+				fxos_active(0);
+			}
 
 			if (!isSleeping) {
 				// If not sleeping, calculate and set new PWM values for detumbling control
@@ -777,6 +813,8 @@ void handle_sleep_logic(float gyro_z)
             // If below SLEEP_THRESHOLD long enough (IDLE_CYCLES), enter sleep mode
             if (quietCounter >= IDLE_CYCLES) {
                 isSleeping = 1;
+                fxas_active(0);	// Change sensor state from active to ready
+                fxos_active(0);
             }
         } else {
         	// If movement above SLEEP_THRESHOLD detected, reset counter
@@ -787,6 +825,8 @@ void handle_sleep_logic(float gyro_z)
         if (fabsf(gyro_z) > WAKEUP_THRESHOLD) {
             isSleeping = 0;
             quietCounter = 0;
+            fxas_active(1); // Change sensor state from ready to active
+            fxos_active(1);
         }
     }
 }
@@ -801,6 +841,31 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         do_control = 1;		// Set flag to indicate that a control cycle should be performed in the main loop
 }
 
+
+
+// Change timer rate function: Toggle between 10 Hz and 1 Hz
+static inline void ctrl_timer_set_rate_hz(uint32_t hz) {
+    __HAL_TIM_DISABLE(&htim14);
+    htim14.Init.Prescaler = 47999;
+    htim14.Init.Period    = (1000 / hz) - 1;
+    HAL_TIM_Base_Init(&htim14);
+    __HAL_TIM_ENABLE_IT(&htim14, TIM_IT_UPDATE);
+    HAL_TIM_Base_Start_IT(&htim14);
+}
+
+// Change gyro state function: Toggle between active and ready
+static inline void fxas_active(uint8_t on) {
+    uint8_t v = on ? 0x1C : 0x18;           // ACTIVE=1/0, DR=011 (as in init_gyro)
+    HAL_I2C_Mem_Write(&hi2c1, 0x21<<1, 0x13, I2C_MEMADD_SIZE_8BIT, &v, 1, 50);
+    if (on) HAL_Delay(70);
+}
+
+// Change magnetometer state function: Toggle between active and ready
+static inline void fxos_active(uint8_t on) {
+    uint8_t v = on ? 0x0D : 0x00;           // CTRL_REG1 ACTIVE=1/0 (as in init_magnetometer)
+    HAL_I2C_Mem_Write(&hi2c1, 0x1F<<1, 0x2A, I2C_MEMADD_SIZE_8BIT, &v, 1, 50);
+    if (on) HAL_Delay(10);
+}
 
 
 /* USER CODE END 4 */
