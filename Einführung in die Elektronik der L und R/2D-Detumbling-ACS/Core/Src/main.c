@@ -743,37 +743,63 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
 }
 
 // Calculates the required control torque (PWM values) based on measured gyro and magnetic field data
-// Implements a simple cross-product control law for 2D detumbling and outputs clamped PWM values (0-100)
+// Implements a PID control law for 2D detumbling and outputs clamped PWM values (0-100)
 void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
 {
-	// Noise threshold: If gyro rate is below the threshold, set PWM to neutral (no actuation)
-    const float threshold = 1.0f;  		// [deg/s] minimum rate to overcome noise
+    // Noise threshold: if gyro rate is below this value, consider it as zero (ignore noise)
+    const float threshold = 1.0f;        // [deg/s] minimum angular rate to trigger control
 
     if (fabsf(gyro_z) < threshold) {
-        *pwm_x = PWM_NEUTRAL;  // Set both axes to idle/neutral (no torque)
+        *pwm_x = PWM_NEUTRAL;           // Set both torquers to neutral (no actuation)
         *pwm_y = PWM_NEUTRAL;
         return;
     }
 
-    // Control law: m = –K * (omega × B)
-    // For 2D: omega = [0,0,omega_z], B = [B_x,0,B_z]
-    // omega x B = [ –omega_z*B_z, omega_z*B_x, 0 ]^T
-    const float K = 0.04f;  					// Control gain, can be tuned for system response
-    float m_x = -K * gyro_z * (float)mag_z;		// Control effort in X
-    float m_y =  K * gyro_z * (float)mag_x;		// Control effort in Y
+    // PID controller for z-axis angular rate (target omega_z = 0)
+    // Error definition: e = -gyro_z (negative feedback)
+    // Control law: u = Kp*e + Ki*Se + Kd*de/dt
+    const float Ts = 0.1f;              // [s] control loop sample time (10 Hz)
+    const float Kp = 0.05f;             // proportional gain (tuned for CubeSat)
+    const float Ki = 0.001f;            // integral gain (small, avoids steady-state bias)
+    const float Kd = 0.0f;              // derivative gain (disabled initially)
 
-    // Convert control efforts to PWM values (0-100, center at 50)
-    int p_x = (int)(50.0f + m_x * 0.1f);		// Scale and offset for X channel
-    int p_y = (int)(50.0f + m_y * 0.7f);		// Scale and offset for Y channel
+    static float e_int = 0.0f;          // integrator state
+    static float e_prev = 0.0f;         // previous error for derivative term
 
-    // Limit PWM values to valid range (0-100)
-    p_x = p_x<0 ? 0 : (p_x>100 ? 100 : p_x);
-    p_y = p_y<0 ? 0 : (p_y>100 ? 100 : p_y);
+    float e  = -gyro_z;                 // control error
+    float de = (e - e_prev) / Ts;       // error derivative
 
-    // Output final values
+    // Integrator with clamping (anti-windup)
+    e_int += e * Ts;
+    if (e_int > 500.0f) e_int = 500.0f;
+    if (e_int < -500.0f) e_int = -500.0f;
+
+    // Control effort from PID law
+    float u = Kp * e + Ki * e_int + Kd * de;
+
+    e_prev = e;
+
+    // Magnetic control law:
+    // m = -u * (w × B)
+    // For ω = [0,0,wz], B = [Bx,0,Bz]
+    // ω × B = [ -wz*Bz, wz*Bx, 0 ]^T
+    float m_x = -u * (float)mag_z;      // commanded dipole in X
+    float m_y =  u * (float)mag_x;      // commanded dipole in Y
+
+    // Convert dipole command to PWM duty cycle (0-100, neutral at 50)
+    // Scaling factors tuned to match typical 3U CubeSat torquer rods (0.2–0.3 A max current)
+    int p_x = (int)(50.0f + m_x * 0.05f);   // small scaling for X channel
+    int p_y = (int)(50.0f + m_y * 0.2f);   // small scaling for Y channel
+
+    // Limit PWM duty cycle to valid range [0,100]
+    p_x = (p_x < 0) ? 0 : ((p_x > 100) ? 100 : p_x);
+    p_y = (p_y < 0) ? 0 : ((p_y > 100) ? 100 : p_y);
+
+    // Final PWM command outputs
     *pwm_x = (uint8_t)p_x;
     *pwm_y = (uint8_t)p_y;
 }
+
 
 // Sets the PWM output values for the X and Y channels (green LED (PC9) and blue LED (PC8))
 void set_pwm(uint8_t pwm_x, uint8_t pwm_y)

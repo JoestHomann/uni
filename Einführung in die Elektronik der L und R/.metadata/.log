@@ -2061,3 +2061,27 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64
 
 !ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-08-26 14:13:24.850
 !MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-08-26 14:28:48.683
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Src\main.c
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-08-26 14:43:01.410
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-08-26 14:43:56.142
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY org.eclipse.cdt.dsf.ui 2 0 2025-08-26 14:45:16.734
+!MESSAGE Unable to locate file: C:\Users\joest\uni\Einf\303\274hrung in die Elektronik der L und R\2D-Detumbling-ACS\Core\Startup\startup_stm32f051r8tx.s
+
+!ENTRY com.st.stm32cube.ide.mcu.debug 4 0 2025-08-26 14:45:20.460
+!MESSAGE Error - No active DSF-Session. tmpSessionId = 13 (contextManager row 121)
+
+!ENTRY com.st.stm32cube.ide.mcu.debug 4 0 2025-08-26 14:45:20.460
+!MESSAGE Existing sessions are:
+
+!ENTRY com.st.stm32cube.ide.mcu.debug 4 0 2025-08-26 14:45:20.461
+!MESSAGE Error - No active DSF-Session. tmpSessionId = 13 (contextManager row 121)
+
+!ENTRY com.st.stm32cube.ide.mcu.debug 4 0 2025-08-26 14:45:20.462
+!MESSAGE Existing sessions are:
