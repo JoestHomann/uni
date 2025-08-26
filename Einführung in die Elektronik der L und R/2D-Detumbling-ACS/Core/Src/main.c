@@ -256,7 +256,6 @@ int main(void)
 			    // Activate sensors and read data when sleeping to check viability of sleeping
 			    fxas_active(1);
 			    fxos_active(1);
-			    HAL_Delay(5);   // Settling-delay
 			}
 
 			// Read values from gyroscope (FXAS21002C) and magnetometer (FXOS8700CQ)
@@ -273,17 +272,11 @@ int main(void)
 					fxas_active(0);          // Change sensor state to ready
 					fxos_active(0);
 					ctrl_timer_set_rate_hz(1);   // 1 Hz while sleeping
-					set_pwm(PWM_SLEEP, PWM_SLEEP);
 				} else {
 					fxas_active(1);          // Change sensor state to active
 					fxos_active(1);
 					ctrl_timer_set_rate_hz(10); // Change timer rate to 10 Hz (active control rate)
 				}
-			}
-
-			if (isSleeping) {
-				fxas_active(0);  // Change sensor state to ready when sleeping
-				fxos_active(0);
 			}
 
 			if (!isSleeping) {
@@ -682,8 +675,6 @@ void read_gyro(float* gyro_z) // FXAS21002C
     // Read the STATUS register to check if new data is available
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *gyro_z = 0.0f;		// I2C read failed
         return;
     }
@@ -698,8 +689,6 @@ void read_gyro(float* gyro_z) // FXAS21002C
     // Read 6 bytes of gyro data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
     if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *gyro_z = 0.0f;		// I2C read failed
         return;
     }
@@ -727,8 +716,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     // Read the STATUS register to check if new data is available
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *mag_x = 0;
         *mag_z = 0;
         return;		// I2C read failed
@@ -745,8 +732,6 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
     // Read 6 bytes of magnetometer data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
     if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
     {
-    	blink_sos_pwm(&PWM_TIMER, PWM_GREEN_LED);
-    	blink_sos_pwm(&PWM_TIMER, PWM_BLUE_LED); // Signal error
         *mag_x = 0;
         *mag_z = 0;
         return;		// I2C read failed
@@ -813,8 +798,6 @@ void handle_sleep_logic(float gyro_z)
             // If below SLEEP_THRESHOLD long enough (IDLE_CYCLES), enter sleep mode
             if (quietCounter >= IDLE_CYCLES) {
                 isSleeping = 1;
-                fxas_active(0);	// Change sensor state from active to ready
-                fxos_active(0);
             }
         } else {
         	// If movement above SLEEP_THRESHOLD detected, reset counter
@@ -825,8 +808,6 @@ void handle_sleep_logic(float gyro_z)
         if (fabsf(gyro_z) > WAKEUP_THRESHOLD) {
             isSleeping = 0;
             quietCounter = 0;
-            fxas_active(1); // Change sensor state from ready to active
-            fxos_active(1);
         }
     }
 }

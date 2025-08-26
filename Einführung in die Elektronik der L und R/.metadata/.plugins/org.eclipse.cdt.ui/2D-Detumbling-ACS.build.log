@@ -1,10 +1,10 @@
-13:41:49 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
+14:13:19 **** Incremental Build of configuration Debug for project 2D-Detumbling-ACS ****
 make -j8 all 
 arm-none-eabi-size  2D-Detumbling-ACS.elf 
    text	   data	    bss	    dec	    hex	filename
-  19164	     12	   1804	  20980	   51f4	2D-Detumbling-ACS.elf
+  19016	     12	   1804	  20832	   5160	2D-Detumbling-ACS.elf
 Finished building: default.size.stdout
  
 
-13:41:50 Build Finished. 0 errors, 0 warnings. (took 312ms)
+14:13:19 Build Finished. 0 errors, 0 warnings. (took 311ms)
 
