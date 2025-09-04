@@ -591,70 +591,55 @@ uint8_t check_magnetometer(void)
 
 
 // Initialises the FXAS21002 gyroscope sensor via I2C
-// Configures sensor in standby mode, sets measurement range, enables data-ready interrupt, and activates the sensor
+// Configures sensor in standby mode, sets measurement range and activates the sensor
 void init_gyro(void)
 {
     const uint8_t fxas_addr = 0x21 << 1;  // I2C address of FXAS21002 (SA0 = HIGH)
 
-    // Set gyroscope to standby mode with a data rate of 100 Hz (DR=011), ACTIVE=0.
-    // Value 0x18 = 0b00011000 written to CTRL_REG1 (0x13)
-    uint8_t ctrl_reg1_standby = 0x18;
+    // Set gyroscope to standby mode with a data rate of 50 Hz (DR=100), ACTIVE=0.
+    // Value 0x10 = 0b00010000 written to CTRL_REG1 (0x13)
+    uint8_t ctrl_reg1_standby = 0x10;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_standby, 1, 100);
-    HAL_Delay(100); // Conservative delay to allow settings to take effect
+    HAL_Delay(5); // Delay for register update
 
-    // Set measurement range to ±250 dps by writing 0x03 to CTRL_REG0 (0x0D)
-    // Value 0x03 = 0b00000011 written to CTRL_REG0 (0x0D), FS1 = 1, FS0 = 1
-    uint8_t ctrl_reg0 = 0x03;
+    // Set measurement range to +-250 dps and enable BW=01 for ~8 Hz LPF at 50 Hz ODR
+    // Value 0x43 = 0b00000011 written to CTRL_REG0 (0x0D), FS1 = 1, FS0 = 1
+    uint8_t ctrl_reg0 = 0x43;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
-    HAL_Delay(100);
+    HAL_Delay(5);
 
-    // Enable the Data Ready interrupt by setting INT_EN_DRDY (bit 2) in CTRL_REG3 (0x15)
-    // Value 0x04 = 0b00000100 written to CTRL_REG3 (0x15), INT_EN_DRDY = 1
-    uint8_t ctrl_reg3 = 0x04;
-    HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x15, I2C_MEMADD_SIZE_8BIT, &ctrl_reg3, 1, 100);
-    HAL_Delay(100);
 
-    // Activate the sensor by setting ACTIVE=1 with the same data rate (DR=011)
-    // Value 0x1C = 0b00011100 written to CTRL_REG1 (0x13)
-    uint8_t ctrl_reg1_active = 0x1C;
+    // Activate the sensor by setting ACTIVE=1 with the same data rate (DR=100)
+    // Value 0x12 = 0b00010010 written to CTRL_REG1 (0x13)
+    uint8_t ctrl_reg1_active = 0x12;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_active, 1, 100);
-    HAL_Delay(100);
+
+    // Allow time for first valid sample after activation
+    HAL_Delay(80);
 }
 
 
 // Initialises the FXOS8700 sensor via I2C
-// Configures sensor in standby mode, sets magnetometer settings, auto-increment, measurement range, and activates the sensor
+// Configures sensor in standby, enables MAG-only mode with high OSR, and activates at 12.5 Hz (low-noise).
 void init_magnetometer(void)
 {
-    uint8_t fxos_addr = 0x1F << 1;	// I2C address of FXOS8700 (SA0 = HIGH)
+    uint8_t fxos_addr = 0x1F << 1;  // I2C address of FXOS8700 (SA0 = HIGH)
 
     // Set standby mode (CTRL_REG1 = 0x00)
     // Value 0x00 = 0b00000000 disables all activity.
     uint8_t standby = 0x00;
     HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &standby, 1, 100);
-    HAL_Delay(100);	// Conservative delay to allow settings to take effect
+    HAL_Delay(100); // Conservative delay to allow settings to take effect
 
-    // Configure magnetometer: M_CTRL_REG1 = 0x1F
-    // Value 0x1F = 0b00011111, HMS=11 (Hybrid Mode), OSR=111 (Oversampling 8x), SMOD=1 (Auto Reset)
-    uint8_t mctrl1 = 0x1F;
+    // Configure magnetometer: M_CTRL_REG1 = 0x1D
+    // Value 0x1D = 0b00011101, HMS=01 (MAG-only mode), OSR=111 (8x oversampling) for lower noise.
+    uint8_t mctrl1 = 0x1D;
     HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x5B, I2C_MEMADD_SIZE_8BIT, &mctrl1, 1, 100);
     HAL_Delay(100);
 
-    // Enable auto-increment mode for magnetometer: M_CTRL_REG2 = 0x20
-    // Value 0x20 = 0b00100000, HYB_AUTOINC_MODE = 1 (auto-increment for reading multi-byte mag data)
-    uint8_t mctrl2 = 0x20;
-    HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x5C, I2C_MEMADD_SIZE_8BIT, &mctrl2, 1, 100);
-    HAL_Delay(100);
-
-    // Set acceleration range to ±4g: XYZ_DATA_CFG = 0x01
-    // Value 0x01 = 0b00000001, RANGE = 01 (+-4g)
-    uint8_t data_cfg = 0x01;
-    HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x0E, I2C_MEMADD_SIZE_8BIT, &data_cfg, 1, 100);
-    HAL_Delay(100);
-
-    // Set to active mode: CTRL_REG1 = 0x0D
-    // Value 0x0D = 0b00001101, DR=001 (200Hz), LNOISE=1 (low noise), ACTIVE=1
-    uint8_t active = 0x0D;
+    // Set to active mode: CTRL_REG1 = 0x2D
+    // Value 0x2D = 0b00101101, DR=101 (12.5 Hz in MAG-only), LNOISE=1 (low noise), ACTIVE=1.
+    uint8_t active = 0x2D;
     HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &active, 1, 100);
     HAL_Delay(100);
 }
@@ -702,7 +687,7 @@ void read_gyro(float* gyro_z) // FXAS21002C
 
 
 // Reads the X and Z components of the magnetic field from the FXOS8700 sensor via I2C
-// Stores the 14-bit signed values in mag_x and mag_z (LSB units)
+// Stores the 16-bit signed values in mag_x and mag_z (LSB units)
 // Sets both to 0 if no new data is available or if a communication error occurs
 void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
 {
@@ -737,9 +722,13 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
         return;		// I2C read failed
     }
 
-    // Combine MSB and LSB to get the raw 14-bit value (signed, left-justified; shift right by 2 bits)
-    *mag_x = (int16_t)((data[0] << 8) | data[1]);
-    *mag_z = (int16_t)((data[4] << 8) | data[5]);
+    // Combine MSB/LSB (MAG is 16-bit 2’s complement, 0.1 muT/LSB)
+    int16_t raw_x = (int16_t)((data[0] << 8) | data[1]);
+    int16_t raw_z = (int16_t)((data[4] << 8) | data[5]);
+
+    *mag_x = raw_x;
+    *mag_z = raw_z;
+
 }
 
 // Computes PWM commands for 2D detumbling using a PI controller.
@@ -754,9 +743,9 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
     const float Ts = 0.1f;               // [s] control loop sample time (10 Hz)
     const float Kp = 0.05f;              // proportional gain
     const float Ti = 8.0f;               // [s] integral time constant (tunable)
-    const float Ki = Kp / Ti;     // integral gain => 0.000625 with values above
+    const float Ki = Kp / Ti;    		 // integral gain
 
-    // Integrator state (kept across calls)
+    // Integrator state
     static float e_int = 0.0f;
 
     // If below noise threshold, command neutral PWM (no actuation)
