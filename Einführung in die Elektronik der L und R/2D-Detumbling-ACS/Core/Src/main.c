@@ -138,11 +138,11 @@ void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);		// Modulates bri
 // Timer-rate function
 static inline void ctrl_timer_set_rate_hz(uint32_t hz);
 
-//
-static inline void fxas_active(uint8_t on);
+// Toggle mode function for gyroscope (FXAS21002C)
+static inline void gyro_active(uint8_t on);
 
-//
-static inline void fxos_active(uint8_t on);
+// Toggle mode function for magnetometer (FXOS8700CQ)
+static inline void magnetometer_active(uint8_t on);
 
 // Note:
 // For further information on the functions' behaviour see the function declaration in /* USER CODE BEGIN 4 */
@@ -266,8 +266,8 @@ int main(void)
 
 			if (isSleeping) {
 			    // Activate sensors and read data when sleeping to check viability of sleeping
-			    fxas_active(1);
-			    fxos_active(1);
+			    gyro_active(1);
+			    magnetometer_active(1);
 			}
 
 			// Read values from gyroscope (FXAS21002C) and magnetometer (FXOS8700CQ)
@@ -281,12 +281,12 @@ int main(void)
 			if (isSleeping != prevSleeping) {
 				prevSleeping = isSleeping;
 				if (isSleeping) {
-					fxas_active(0);          // Change sensor state to ready
-					fxos_active(0);
+					gyro_active(0);          // Change sensor state to ready
+					magnetometer_active(0);
 					ctrl_timer_set_rate_hz(1);   // 1 Hz while sleeping
 				} else {
-					fxas_active(1);          // Change sensor state to active
-					fxos_active(1);
+					gyro_active(1);          // Change sensor state to active
+					magnetometer_active(1);
 					ctrl_timer_set_rate_hz(10); // Change timer rate to 10 Hz (active control rate)
 
 					e_int = 0.0f; // Reset PI integrator on wake to avoid bias after long idle
@@ -614,21 +614,18 @@ void init_gyro(void)
     // Value 0x10 = 0b00010000 written to CTRL_REG1 (0x13)
     uint8_t ctrl_reg1_standby = 0x10;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_standby, 1, 100);
-    HAL_Delay(5); // Delay for register update
+    HAL_Delay(10); // Delay for register update
 
     // Set measurement range to +-250 dps and enable BW=01 for ~8 Hz LPF at 50 Hz ODR
     // Value 0x43 = 0b00000011 written to CTRL_REG0 (0x0D), FS1 = 1, FS0 = 1
     uint8_t ctrl_reg0 = 0x43;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
-    HAL_Delay(5);
-
+    HAL_Delay(10);
 
     // Activate the sensor by setting ACTIVE=1 with the same data rate (DR=100)
     // Value 0x12 = 0b00010010 written to CTRL_REG1 (0x13)
     uint8_t ctrl_reg1_active = 0x12;
     HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_active, 1, 100);
-
-    // Allow time for first valid sample after activation
     HAL_Delay(80);
 }
 
@@ -643,19 +640,19 @@ void init_magnetometer(void)
     // Value 0x00 = 0b00000000 disables all activity.
     uint8_t standby = 0x00;
     HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &standby, 1, 100);
-    HAL_Delay(100); // Conservative delay to allow settings to take effect
+    HAL_Delay(10); // Conservative delay to allow settings to take effect
 
     // Configure magnetometer: M_CTRL_REG1 = 0x1D
     // Value 0x1D = 0b00011101, HMS=01 (MAG-only mode), OSR=111 (8x oversampling) for lower noise.
     uint8_t mctrl1 = 0x1D;
     HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x5B, I2C_MEMADD_SIZE_8BIT, &mctrl1, 1, 100);
-    HAL_Delay(100);
+    HAL_Delay(10);
 
     // Set to active mode: CTRL_REG1 = 0x2D
     // Value 0x2D = 0b00101101, DR=101 (12.5 Hz in MAG-only), LNOISE=1 (low noise), ACTIVE=1.
     uint8_t active = 0x2D;
     HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &active, 1, 100);
-    HAL_Delay(100);
+    HAL_Delay(80);
 }
 
 
@@ -854,17 +851,17 @@ static inline void ctrl_timer_set_rate_hz(uint32_t hz) {
 }
 
 // Change gyro state function: Toggle between active and ready
-static inline void fxas_active(uint8_t on) {
-    uint8_t v = on ? 0x12 : 0x10;   // DR=100 (50 Hz), ACTIVE=1/0 (as in init_gyro)
-    HAL_I2C_Mem_Write(&hi2c1, 0x21<<1, 0x13, I2C_MEMADD_SIZE_8BIT, &v, 1, 50);
-    if (on) HAL_Delay(80);          // >= 1/ODR + margin
+static inline void gyro_active(uint8_t on) {
+    uint8_t state = on ? 0x12 : 0x10;   // DR=100 (50 Hz), ACTIVE=1/0 (as in init_gyro)
+    HAL_I2C_Mem_Write(&hi2c1, 0x21<<1, 0x13, I2C_MEMADD_SIZE_8BIT, &state, 1, 50);
+    HAL_Delay(80);
 }
 
 // Change magnetometer state function: Toggle between active and ready
-static inline void fxos_active(uint8_t on) {
-    uint8_t v = on ? 0x2D : 0x00;   // CTRL_REG1 ACTIVE=1/0, DR=101 (12.5 Hz), LNOISE=1 (as in init_magnetometer)
-    HAL_I2C_Mem_Write(&hi2c1, 0x1F<<1, 0x2A, I2C_MEMADD_SIZE_8BIT, &v, 1, 50);
-    if (on) HAL_Delay(100);         // >= 1/ODR + margin
+static inline void magnetometer_active(uint8_t on) {
+    uint8_t state = on ? 0x2D : 0x00;   // CTRL_REG1 ACTIVE=1/0, DR=101 (12.5 Hz), LNOISE=1 (as in init_magnetometer)
+    HAL_I2C_Mem_Write(&hi2c1, 0x1F<<1, 0x2A, I2C_MEMADD_SIZE_8BIT, &state, 1, 50);
+    HAL_Delay(100);
 }
 
 
