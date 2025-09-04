@@ -109,10 +109,10 @@ void init_magnetometer(void);		// Initialisation of control registers of the mag
 
 // Read sensor functions
 void read_gyro(float* gyro_z);		// Outputs Z-axis sensor values of 3-axis digital angular rate gyroscope (FXAS21002C)
-void read_magnetometer(int16_t* mag_x, int16_t* mag_z);		// Outputs X- and Z-axis sensor values of magnetometer (FXOS8700CQ)
+void read_magnetometer(float* mag_x, float* mag_z);		// Outputs X- and Z-axis sensor values of magnetometer (FXOS8700CQ)
 
 // Calculation function
-void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y);	// Computes PWM-value ("torque of magnetorquer") from sensor values
+void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t* pwm_x, uint8_t* pwm_y);	// Computes PWM-value ("torque of magnetorquer") from sensor values
 
 // Sleep function
 void handle_sleep_logic(float gyro_z);			// Implements sleep logic with IDLE_CYCLES, SLEEP_THRESHOLD and WAKEUP_THRESHOLD
@@ -249,7 +249,7 @@ int main(void)
 
 			// Initialise local variables for current sensor readings and PWM outputs
 			float gyro_z = 0.0f;
-			int16_t mag_x = 0, mag_z = 0;
+			float mag_x = 0, mag_z = 0;
 			uint8_t pwm_x = 0, pwm_y = 0;
 
 			if (isSleeping) {
@@ -689,7 +689,7 @@ void read_gyro(float* gyro_z) // FXAS21002C
 // Reads the X and Z components of the magnetic field from the FXOS8700 sensor via I2C
 // Stores the 16-bit signed values in mag_x and mag_z (LSB units)
 // Sets both to 0 if no new data is available or if a communication error occurs
-void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
+void read_magnetometer(float* mag_x, float* mag_z) // fxos8700
 {
     const uint8_t fxos_addr = 0x1F << 1;	// I2C address of FXOS8700 (SA0 = HIGH)
     const uint8_t reg_status = 0x32;		// Address of the STATUS register
@@ -722,19 +722,19 @@ void read_magnetometer(int16_t* mag_x, int16_t* mag_z) // fxos8700
         return;		// I2C read failed
     }
 
-    // Combine MSB/LSB (MAG is 16-bit 2’s complement, 0.1 muT/LSB)
+    // Combine MSB/LSB to raw data
     int16_t raw_x = (int16_t)((data[0] << 8) | data[1]);
     int16_t raw_z = (int16_t)((data[4] << 8) | data[5]);
 
-    *mag_x = raw_x;
-    *mag_z = raw_z;
+    *mag_x = raw_x * 0.1f;	// [muT/LSB]
+    *mag_z = raw_z * 0.1f;
 
 }
 
 // Computes PWM commands for 2D detumbling using a PI controller.
-// Input:  gyro_z [deg/s], magnetic field samples (raw counts) mag_x, mag_z.
-// Output: pwm_x, pwm_y in [0..100] with neutral at PWM_NEUTRAL.
-void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
+// Input:  gyro_z [deg/s], magnetic field values mag_x, mag_z.
+// Output: pwm_x, pwm_y in [0,100] with neutral at PWM_NEUTRAL.
+void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
 {
     // Deadband to ignore gyro noise
     const float threshold = 0.1f;        // [deg/s]
@@ -767,13 +767,13 @@ void compute_torque(float gyro_z, int16_t mag_x, int16_t mag_z, uint8_t* pwm_x, 
     const float u = Kp * e + Ki * e_int;
 
     // Magnetic control: m = -u * (w × B)
-    // For w=[0,0,wz], B=[Bx,0,Bz] -> w×B=[-wz*Bz, wz*Bx, 0]^T
-    const float m_x = -u * (float)mag_z; // commanded moment along X
-    const float m_y =  u * (float)mag_x; // commanded moment along Y
+    // For w=[0,0,wz], B=[Bx,0,Bz] -> w×B=[-w_z*B_z, w_z*B_x, 0]^T
+    const float m_x = -u * mag_z; // commanded moment along X
+    const float m_y =  u * mag_x; // commanded moment along Y
 
     // Map commanded moment to PWM duty cycle (0–100, neutral at 50)
-    int p_x = (int)(50.0f + m_x * 0.05f);
-    int p_y = (int)(50.0f + m_y * 0.05f);
+    int p_x = (int)(50.0f + m_x * 0.5f);
+    int p_y = (int)(50.0f + m_y * 0.5f);
 
     // Clamp to valid range
     if (p_x < 0) p_x = 0; else if (p_x > 100) p_x = 100;
@@ -846,16 +846,16 @@ static inline void ctrl_timer_set_rate_hz(uint32_t hz) {
 
 // Change gyro state function: Toggle between active and ready
 static inline void fxas_active(uint8_t on) {
-    uint8_t v = on ? 0x1C : 0x18;           // ACTIVE=1/0, DR=011 (as in init_gyro)
+    uint8_t v = on ? 0x12 : 0x10;   // DR=100 (50 Hz), ACTIVE=1/0 (as in init_gyro)
     HAL_I2C_Mem_Write(&hi2c1, 0x21<<1, 0x13, I2C_MEMADD_SIZE_8BIT, &v, 1, 50);
-    if (on) HAL_Delay(70);
+    if (on) HAL_Delay(80);          // >= 1/ODR + margin
 }
 
 // Change magnetometer state function: Toggle between active and ready
 static inline void fxos_active(uint8_t on) {
-    uint8_t v = on ? 0x0D : 0x00;           // CTRL_REG1 ACTIVE=1/0 (as in init_magnetometer)
+    uint8_t v = on ? 0x2D : 0x00;   // CTRL_REG1 ACTIVE=1/0, DR=101 (12.5 Hz), LNOISE=1 (as in init_magnetometer)
     HAL_I2C_Mem_Write(&hi2c1, 0x1F<<1, 0x2A, I2C_MEMADD_SIZE_8BIT, &v, 1, 50);
-    if (on) HAL_Delay(10);
+    if (on) HAL_Delay(100);         // >= 1/ODR + margin
 }
 
 
