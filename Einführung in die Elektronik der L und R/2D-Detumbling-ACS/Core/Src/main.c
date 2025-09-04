@@ -61,9 +61,18 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 // ============================= USER PDs =====================================
+
+// Control law
+#define CTRL_THRESHOLD			0.2f	// [°/s] Deadband to ignore gyro noise
+#define GAIN_X					0.25f	// [-] Gain of momentum in x-direction
+#define GAIN_Y					0.25f	// [-] Gain of momentum in y-direction
+
+// Sleep functionality
 #define SLEEP_THRESHOLD			1.0f	// [°/s] Threshold to enter sleep mode
 #define WAKEUP_THRESHOLD		2.0f	// [°/s] Threshold to exit sleep mode
 #define IDLE_CYCLES				50		// [-] at 10 Hz control cycle: 5 sec
+
+// Pulse Width Modulation
 #define PWM_NEUTRAL				50		// [%] Neutral brightness (50 %)
 #define PWM_SLEEP				1		// [%] Sleep brightness   (1 %)
 #define PWM_MAX					100		// [%] Maximum brightness (100 %)
@@ -85,8 +94,11 @@ TIM_HandleTypeDef htim14;
 /* USER CODE BEGIN PV */
 
 volatile 	uint8_t 	do_control = 0;		// Timer interrupt flag for control cycle
+
 static 		uint8_t 	isSleeping = 0;		// Sleep flag
 static 		uint16_t 	quietCounter = 0;	// If quietCounter value reaches IDLE_CYCLES value enter sleep mode
+
+static float e_int = 0.0f; 					// PI integrator state shared between main() and compute_torque()
 
 /* USER CODE END PV */
 
@@ -276,6 +288,8 @@ int main(void)
 					fxas_active(1);          // Change sensor state to active
 					fxos_active(1);
 					ctrl_timer_set_rate_hz(10); // Change timer rate to 10 Hz (active control rate)
+
+					e_int = 0.0f; // Reset PI integrator on wake to avoid bias after long idle
 				}
 			}
 
@@ -687,8 +701,8 @@ void read_gyro(float* gyro_z) // FXAS21002C
 
 
 // Reads the X and Z components of the magnetic field from the FXOS8700 sensor via I2C
-// Stores the 16-bit signed values in mag_x and mag_z (LSB units)
-// Sets both to 0 if no new data is available or if a communication error occurs
+// Stores the values in mag_x and mag_z and converts them into physical units before
+// Sets both values to 0 if no new data is available or if a communication error occurs
 void read_magnetometer(float* mag_x, float* mag_z) // fxos8700
 {
     const uint8_t fxos_addr = 0x1F << 1;	// I2C address of FXOS8700 (SA0 = HIGH)
@@ -736,8 +750,6 @@ void read_magnetometer(float* mag_x, float* mag_z) // fxos8700
 // Output: pwm_x, pwm_y in [0,100] with neutral at PWM_NEUTRAL.
 void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
 {
-    // Deadband to ignore gyro noise
-    const float threshold = 0.1f;        // [deg/s]
 
     // Controller parameters
     const float Ts = 0.1f;               // [s] control loop sample time (10 Hz)
@@ -745,11 +757,8 @@ void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t* pwm_x, uint
     const float Ti = 8.0f;               // [s] integral time constant (tunable)
     const float Ki = Kp / Ti;    		 // integral gain
 
-    // Integrator state
-    static float e_int = 0.0f;
-
     // If below noise threshold, command neutral PWM (no actuation)
-    if (fabsf(gyro_z) < threshold) {
+    if (fabsf(gyro_z) < CTRL_THRESHOLD) {
         *pwm_x = PWM_NEUTRAL;
         *pwm_y = PWM_NEUTRAL;
         return;
@@ -767,17 +776,17 @@ void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t* pwm_x, uint
     const float u = Kp * e + Ki * e_int;
 
     // Magnetic control: m = -u * (w × B)
-    // For w=[0,0,wz], B=[Bx,0,Bz] -> w×B=[-w_z*B_z, w_z*B_x, 0]^T
-    const float m_x = -u * mag_z; // commanded moment along X
-    const float m_y =  u * mag_x; // commanded moment along Y
+    // For w=[0, 0, w_z], B=[B_x,0,B_z] -> w x B=[-w_z * B_z, w_z * B_x, 0]^T
+    const float m_x = -u * mag_z; // commanded moment along x-axis
+    const float m_y =  u * mag_x; // commanded moment along y-axis
 
     // Map commanded moment to PWM duty cycle (0–100, neutral at 50)
-    int p_x = (int)(50.0f + m_x * 0.5f);
-    int p_y = (int)(50.0f + m_y * 0.5f);
+    int p_x = (int)(50.0f + m_x * GAIN_X);
+    int p_y = (int)(50.0f + m_y * GAIN_Y);
 
-    // Clamp to valid range
-    if (p_x < 0) p_x = 0; else if (p_x > 100) p_x = 100;
-    if (p_y < 0) p_y = 0; else if (p_y > 100) p_y = 100;
+    // Clamp to valid PWM range
+    if (p_x < PWM_MIN) p_x = PWM_MIN; else if (p_x > PWM_MAX) p_x = PWM_MAX;
+    if (p_y < PWM_MIN) p_y = PWM_MIN; else if (p_y > PWM_MAX) p_y = PWM_MAX;
 
     // Outputs
     *pwm_x = (uint8_t)p_x;
@@ -834,7 +843,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 
 
-// Change timer rate function: Toggle between 10 Hz and 1 Hz
+// Change timer rate function
 static inline void ctrl_timer_set_rate_hz(uint32_t hz) {
     __HAL_TIM_DISABLE(&htim14);
     htim14.Init.Prescaler = 47999;
