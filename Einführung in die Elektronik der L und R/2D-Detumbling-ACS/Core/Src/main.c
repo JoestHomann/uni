@@ -144,6 +144,9 @@ static inline void gyro_active(uint8_t on);
 // Toggle mode function for magnetometer (FXOS8700CQ)
 static inline void magnetometer_active(uint8_t on);
 
+// Runs one ACS control step
+static void control_step(void);
+
 // Note:
 // For further information on the functions' behaviour see the function declaration in /* USER CODE BEGIN 4 */
 
@@ -194,6 +197,8 @@ int main(void)
   HAL_TIM_PWM_Start(&PWM_TIMER, PWM_BLUE_LED);
   HAL_TIM_PWM_Start(&PWM_TIMER, PWM_GREEN_LED);
 
+  // Power-up delay to ensure sensors are powered up after long powerless phase
+  HAL_Delay(2000);
 
   // Check, if who_am_i register of the sensors returns the correct value and blink accordingly
   if (check_gyro())
@@ -254,55 +259,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (1) {
+	while (1)
+	{
 		if (do_control)	// If the timer-interrupt-flag is set (true = 1), start the control cycle
 		{
 			do_control = 0;	// Reset flag
-
-			// Initialise local variables for current sensor readings and PWM outputs
-			float gyro_z = 0.0f;
-			float mag_x = 0, mag_z = 0;
-			uint8_t pwm_x = 0, pwm_y = 0;
-
-			if (isSleeping) {
-			    // Activate sensors and read data when sleeping to check viability of sleeping
-			    gyro_active(1);
-			    magnetometer_active(1);
-			}
-
-			// Read values from gyroscope (FXAS21002C) and magnetometer (FXOS8700CQ)
-			read_gyro(&gyro_z);
-			read_magnetometer(&mag_x, &mag_z);
-
-			// Evaluate sleep logic (set isSleeping-flag if necessary conditions are met)
-			handle_sleep_logic(gyro_z);
-
-			static uint8_t prevSleeping = 0;
-			if (isSleeping != prevSleeping) {
-				prevSleeping = isSleeping;
-				if (isSleeping) {
-					gyro_active(0);          // Change sensor state to ready
-					magnetometer_active(0);
-					ctrl_timer_set_rate_hz(1);   // 1 Hz while sleeping
-				} else {
-					gyro_active(1);          // Change sensor state to active
-					magnetometer_active(1);
-					ctrl_timer_set_rate_hz(10); // Change timer rate to 10 Hz (active control rate)
-
-					e_int = 0.0f; // Reset PI integrator on wake to avoid bias after long idle
-				}
-			}
-
-			if (!isSleeping) {
-				// If not sleeping, calculate and set new PWM values for detumbling control
-				compute_torque(gyro_z, mag_x, mag_z, &pwm_x, &pwm_y);
-				set_pwm(pwm_x, pwm_y);
-			} else {
-				// If sleeping, set PWM to PWM_SLEEP
-				set_pwm(PWM_SLEEP, PWM_SLEEP);
-			}
+			control_step();               // All sensing, logic, and actuation in here
 		}
-
 		// Enter sleep mode
 		HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 
@@ -521,349 +484,378 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 // Blink "SOS" on a PWM channel in Morse code
-void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel)
-{
+void blink_sos_pwm(TIM_HandleTypeDef *htim, uint32_t channel) {
 	// Blink "S"
-  for (int i = 0; i < 3; i++) {
-    __HAL_TIM_SET_COMPARE(htim, channel, PWM_MAX);
-    HAL_Delay(150);
-    __HAL_TIM_SET_COMPARE(htim, channel, PWM_MIN);
-    HAL_Delay(150);
-  }
+	for (int i = 0; i < 3; i++) {
+		__HAL_TIM_SET_COMPARE(htim, channel, PWM_MAX);
+		HAL_Delay(150);
+		__HAL_TIM_SET_COMPARE(htim, channel, PWM_MIN);
+		HAL_Delay(150);
+	}
 
-  HAL_Delay(300);	// Pause between S and O
+	HAL_Delay(300);	// Pause between S and O
 
-  // Blink "O"
-  for (int i = 0; i < 3; i++) {
-    __HAL_TIM_SET_COMPARE(htim, channel, PWM_MAX);
-    HAL_Delay(450);
-    __HAL_TIM_SET_COMPARE(htim, channel, PWM_MIN);
-    HAL_Delay(150);
-  }
+	// Blink "O"
+	for (int i = 0; i < 3; i++) {
+		__HAL_TIM_SET_COMPARE(htim, channel, PWM_MAX);
+		HAL_Delay(450);
+		__HAL_TIM_SET_COMPARE(htim, channel, PWM_MIN);
+		HAL_Delay(150);
+	}
 
-  HAL_Delay(300);	// Pause between O and final S
+	HAL_Delay(300);	// Pause between O and final S
 
-  // Blink "S"
-  for (int i = 0; i < 3; i++) {
-    __HAL_TIM_SET_COMPARE(htim, channel, PWM_MAX);
-    HAL_Delay(150);
-    __HAL_TIM_SET_COMPARE(htim, channel, PWM_MIN);
-    HAL_Delay(150);
-  }
+	// Blink "S"
+	for (int i = 0; i < 3; i++) {
+		__HAL_TIM_SET_COMPARE(htim, channel, PWM_MAX);
+		HAL_Delay(150);
+		__HAL_TIM_SET_COMPARE(htim, channel, PWM_MIN);
+		HAL_Delay(150);
+	}
 
-  // Set channel back to PWM_NEUTRAL
-  __HAL_TIM_SET_COMPARE(htim, channel, PWM_NEUTRAL);
+	// Set channel back to PWM_NEUTRAL
+	__HAL_TIM_SET_COMPARE(htim, channel, PWM_NEUTRAL);
 }
-
 
 // Checks if the FXAS21002 gyroscope sensor is connected and responding correctly over I2C
 // Returns 1 if the correct sensor is detected, 0 otherwise
-uint8_t check_gyro(void)
-{
-  uint8_t fxas_addr = 0x21 << 1;	// I2C address for FXAS21002 (SA0 = HIGH), shifted left for HAL
-  uint8_t reg_addr = 0x0C;			// WHO_AM_I register address
-  uint8_t id = 0;					// Variable to store sensor ID
+uint8_t check_gyro(void) {
+	uint8_t fxas_addr = 0x21 << 1;// I2C address for FXAS21002 (SA0 = HIGH), shifted left for HAL
+	uint8_t reg_addr = 0x0C;			// WHO_AM_I register address
+	uint8_t id = 0;					// Variable to store sensor ID
 
-  // Read 1 byte from the WHO_AM_I register of the sensor
-  if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_addr, I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK)
-  {
-    return 0;  // I2C read failed (no response or bus error)
-  }
+	// Read 1 byte from the WHO_AM_I register of the sensor
+	if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_addr, I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK) {
+		return 0;  // I2C read failed (no response or bus error)
+	}
 
-  // Check if the returned ID matches the expected value for FXAS21002 (0xD7)
-  if (id == 0xD7)
-  {
-    return 1;  // Sensor is present and correct
-  }
+	// Check if the returned ID matches the expected value for FXAS21002 (0xD7)
+	if (id == 0xD7) {
+		return 1;  // Sensor is present and correct
+	}
 
-  return 0;  // Received a different ID; wrong device or communication error
+	return 0;  // Received a different ID; wrong device or communication error
 }
-
 
 // Checks if the FXOS8700 sensor is connected and responding correctly over I2C
 // Returns 1 if the correct sensor is detected, 0 otherwise
-uint8_t check_magnetometer(void)
-{
-  uint8_t fxos_addr = 0x1F << 1;  	// I2C address of FXOS8700 (SA0 = 1), shifted left for HAL
-  uint8_t reg_addr = 0x0D;      	// Address of the WHO_AM_I register
-  uint8_t id = 0;					// Variable to store the sensor ID
+uint8_t check_magnetometer(void) {
+	uint8_t fxos_addr = 0x1F << 1; // I2C address of FXOS8700 (SA0 = 1), shifted left for HAL
+	uint8_t reg_addr = 0x0D;      	// Address of the WHO_AM_I register
+	uint8_t id = 0;					// Variable to store the sensor ID
 
-  // Read 1 byte from the WHO_AM_I register of the sensor
-  if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_addr, I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK)
-  {
-    return 0;  // I2C read failed (no response or bus error)
-  }
+	// Read 1 byte from the WHO_AM_I register of the sensor
+	if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_addr, I2C_MEMADD_SIZE_8BIT, &id, 1, 100) != HAL_OK) {
+		return 0;  // I2C read failed (no response or bus error)
+	}
 
-  // Check if the received ID matches the expected value for FXOS8700 (0xC7)
-  if (id == 0xC7)
-  {
-    return 1;  // Sensor is present and correct
-  }
+	// Check if the received ID matches the expected value for FXOS8700 (0xC7)
+	if (id == 0xC7) {
+		return 1;  // Sensor is present and correct
+	}
 
-  return 0;  // Received a different ID; wrong device or communication error
+	return 0;  // Received a different ID; wrong device or communication error
 }
-
 
 // Initialises the FXAS21002 gyroscope sensor via I2C
 // Configures sensor in standby mode, sets measurement range and activates the sensor
-void init_gyro(void)
-{
-    const uint8_t fxas_addr = 0x21 << 1;  // I2C address of FXAS21002 (SA0 = HIGH)
+void init_gyro(void) {
+	const uint8_t fxas_addr = 0x21 << 1; // I2C address of FXAS21002 (SA0 = HIGH)
 
-    // Set gyroscope to standby mode with a data rate of 50 Hz (DR=100), ACTIVE=0.
-    // Value 0x10 = 0b00010000 written to CTRL_REG1 (0x13)
-    uint8_t ctrl_reg1_standby = 0x10;
-    HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_standby, 1, 100);
-    HAL_Delay(10); // Delay for register update
+	// Set gyroscope to standby mode with a data rate of 50 Hz (DR=100), ACTIVE=0.
+	// Value 0x10 = 0b00010000 written to CTRL_REG1 (0x13)
+	uint8_t ctrl_reg1_standby = 0x10;
+	HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_standby, 1, 100);
+	HAL_Delay(10); // Delay for register update
 
-    // Set measurement range to +-250 dps and enable BW=01 for ~8 Hz LPF at 50 Hz ODR
-    // Value 0x43 = 0b00000011 written to CTRL_REG0 (0x0D), FS1 = 1, FS0 = 1
-    uint8_t ctrl_reg0 = 0x43;
-    HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
-    HAL_Delay(10);
+	// Set measurement range to +-250 dps and enable BW=01 for ~8 Hz LPF at 50 Hz ODR
+	// Value 0x43 = 0b00000011 written to CTRL_REG0 (0x0D), FS1 = 1, FS0 = 1
+	uint8_t ctrl_reg0 = 0x43;
+	HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x0D, I2C_MEMADD_SIZE_8BIT, &ctrl_reg0, 1, 100);
+	HAL_Delay(10);
 
-    // Activate the sensor by setting ACTIVE=1 with the same data rate (DR=100)
-    // Value 0x12 = 0b00010010 written to CTRL_REG1 (0x13)
-    uint8_t ctrl_reg1_active = 0x12;
-    HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_active, 1, 100);
-    HAL_Delay(80);
+	// Activate the sensor by setting ACTIVE=1 with the same data rate (DR=100)
+	// Value 0x12 = 0b00010010 written to CTRL_REG1 (0x13)
+	uint8_t ctrl_reg1_active = 0x12;
+	HAL_I2C_Mem_Write(&hi2c1, fxas_addr, 0x13, I2C_MEMADD_SIZE_8BIT, &ctrl_reg1_active, 1, 100);
+	HAL_Delay(80);
 }
-
 
 // Initialises the FXOS8700 sensor via I2C
 // Configures sensor in standby, enables MAG-only mode with high OSR, and activates at 12.5 Hz (low-noise).
-void init_magnetometer(void)
-{
-    uint8_t fxos_addr = 0x1F << 1;  // I2C address of FXOS8700 (SA0 = HIGH)
+void init_magnetometer(void) {
+	uint8_t fxos_addr = 0x1F << 1;  // I2C address of FXOS8700 (SA0 = HIGH)
 
-    // Set standby mode (CTRL_REG1 = 0x00)
-    // Value 0x00 = 0b00000000 disables all activity.
-    uint8_t standby = 0x00;
-    HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &standby, 1, 100);
-    HAL_Delay(10); // Conservative delay to allow settings to take effect
+	// Set standby mode (CTRL_REG1 = 0x00)
+	// Value 0x00 = 0b00000000 disables all activity.
+	uint8_t standby = 0x00;
+	HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &standby, 1, 100);
+	HAL_Delay(10); // Conservative delay to allow settings to take effect
 
-    // Configure magnetometer: M_CTRL_REG1 = 0x1D
-    // Value 0x1D = 0b00011101, HMS=01 (MAG-only mode), OSR=111 (8x oversampling) for lower noise.
-    uint8_t mctrl1 = 0x1D;
-    HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x5B, I2C_MEMADD_SIZE_8BIT, &mctrl1, 1, 100);
-    HAL_Delay(10);
+	// Configure magnetometer: M_CTRL_REG1 = 0x1D
+	// Value 0x1D = 0b00011101, HMS=01 (MAG-only mode), OSR=111 (8x oversampling) for lower noise.
+	uint8_t mctrl1 = 0x1D;
+	HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x5B, I2C_MEMADD_SIZE_8BIT, &mctrl1, 1, 100);
+	HAL_Delay(10);
 
-    // Set to active mode: CTRL_REG1 = 0x2D
-    // Value 0x2D = 0b00101101, DR=101 (12.5 Hz in MAG-only), LNOISE=1 (low noise), ACTIVE=1.
-    uint8_t active = 0x2D;
-    HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &active, 1, 100);
-    HAL_Delay(80);
+	// Set to active mode: CTRL_REG1 = 0x2D
+	// Value 0x2D = 0b00101101, DR=101 (12.5 Hz in MAG-only), LNOISE=1 (low noise), ACTIVE=1.
+	uint8_t active = 0x2D;
+	HAL_I2C_Mem_Write(&hi2c1, fxos_addr, 0x2A, I2C_MEMADD_SIZE_8BIT, &active, 1, 100);
+	HAL_Delay(80);
 }
-
 
 // Reads the Z-axis angular rate from the FXAS21002 gyroscope via I2C
 // Stores the angular rate in degrees per second in the variable pointed to by gyro_z
 // Returns 0.0f if there is a communication error or if no new data is available
-void read_gyro(float* gyro_z) // FXAS21002C
+void read_gyro(float *gyro_z) // FXAS21002C
 {
-    const uint8_t fxas_addr = 0x21 << 1;	// I2C address of FXAS21002 (SA0 = HIGH)
-    const uint8_t reg_status = 0x00;		// Address of the STATUS register
-    const uint8_t reg_gyro_x_msb = 0x01;	// Address of the first gyro data register (X_MSB)
+	const uint8_t fxas_addr = 0x21 << 1;// I2C address of FXAS21002 (SA0 = HIGH)
+	const uint8_t reg_status = 0x00;		// Address of the STATUS register
+	const uint8_t reg_gyro_x_msb = 0x01;// Address of the first gyro data register (X_MSB)
 
-    uint8_t status = 0;			// Variable to store the STATUS register value
-    uint8_t data[6] = {0};  	// Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
+	uint8_t status = 0;			// Variable to store the STATUS register value
+	uint8_t data[6] = { 0 }; // Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
 
-    // Read the STATUS register to check if new data is available
-    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
-    {
-        *gyro_z = 0.0f;		// I2C read failed
-        return;
-    }
+	// Read the STATUS register to check if new data is available
+	if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK) {
+		*gyro_z = 0.0f;		// I2C read failed
+		return;
+	}
 
-    // Check if new data for all axes is available (ZYXDR bit, bit 3 must be set)
-    if ((status & 0x08) == 0)
-    {
-        *gyro_z = 0.0f;		// No new data available
-        return;
-    }
+	// Check if new data for all axes is available (ZYXDR bit, bit 3 must be set)
+	if ((status & 0x08) == 0) {
+		*gyro_z = 0.0f;		// No new data available
+		return;
+	}
 
-    // Read 6 bytes of gyro data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
-    if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
-    {
-        *gyro_z = 0.0f;		// I2C read failed
-        return;
-    }
+	// Read 6 bytes of gyro data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
+	if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK) {
+		*gyro_z = 0.0f;		// I2C read failed
+		return;
+	}
 
-    // Combine Z_MSB and Z_LSB to get the raw Z-axis value (16-bit signed integer)
-    int16_t raw_z = (int16_t)((data[4] << 8) | data[5]);
+	// Combine Z_MSB and Z_LSB to get the raw Z-axis value (16-bit signed integer)
+	int16_t raw_z = (int16_t) ((data[4] << 8) | data[5]);
 
-    // Convert the raw value to degrees per second (7.8125 mdps/LSB = 0.0078125 dps/LSB)
-    *gyro_z = raw_z * 0.0078125f;
+	// Convert the raw value to degrees per second (7.8125 mdps/LSB = 0.0078125 dps/LSB)
+	*gyro_z = raw_z * 0.0078125f;
 }
-
 
 // Reads the X and Z components of the magnetic field from the FXOS8700 sensor via I2C
 // Stores the values in mag_x and mag_z and converts them into physical units before
 // Sets both values to 0 if no new data is available or if a communication error occurs
-void read_magnetometer(float* mag_x, float* mag_z) // fxos8700
+void read_magnetometer(float *mag_x, float *mag_z) // fxos8700
 {
-    const uint8_t fxos_addr = 0x1F << 1;	// I2C address of FXOS8700 (SA0 = HIGH)
-    const uint8_t reg_status = 0x32;		// Address of the STATUS register
-    const uint8_t reg_mag_x_msb = 0x33;		// Address of the first magnetometer data register (X_MSB)
+	const uint8_t fxos_addr = 0x1F << 1;// I2C address of FXOS8700 (SA0 = HIGH)
+	const uint8_t reg_status = 0x32;		// Address of the STATUS register
+	const uint8_t reg_mag_x_msb = 0x33;	// Address of the first magnetometer data register (X_MSB)
 
-    uint8_t status = 0;			// Variable to store the STATUS register value
-    uint8_t data[6] = {0};  	// Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
+	uint8_t status = 0;			// Variable to store the STATUS register value
+	uint8_t data[6] = { 0 }; // Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
 
-    // Read the STATUS register to check if new data is available
-    if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK)
-    {
-        *mag_x = 0;
-        *mag_z = 0;
-        return;		// I2C read failed
-    }
+	// Read the STATUS register to check if new data is available
+	if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK) {
+		*mag_x = 0;
+		*mag_z = 0;
+		return;		// I2C read failed
+	}
 
-    // Check if new magnetometer data for all axes is available (ZYXDR bit, bit 3 must be set)
-    if ((status & 0x08) == 0)
-    {
-        *mag_x = 0;
-        *mag_z = 0;
-        return;		// No new data available
-    }
+	// Check if new magnetometer data for all axes is available (ZYXDR bit, bit 3 must be set)
+	if ((status & 0x08) == 0) {
+		*mag_x = 0;
+		*mag_z = 0;
+		return;		// No new data available
+	}
 
-    // Read 6 bytes of magnetometer data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
-    if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK)
-    {
-        *mag_x = 0;
-        *mag_z = 0;
-        return;		// I2C read failed
-    }
+	// Read 6 bytes of magnetometer data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
+	if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK) {
+		*mag_x = 0;
+		*mag_z = 0;
+		return;		// I2C read failed
+	}
 
-    // Combine MSB/LSB to raw data
-    int16_t raw_x = (int16_t)((data[0] << 8) | data[1]);
-    int16_t raw_z = (int16_t)((data[4] << 8) | data[5]);
+	// Combine MSB/LSB to raw data
+	int16_t raw_x = (int16_t) ((data[0] << 8) | data[1]);
+	int16_t raw_z = (int16_t) ((data[4] << 8) | data[5]);
 
-    *mag_x = raw_x * 0.1f;	// [muT/LSB]
-    *mag_z = raw_z * 0.1f;
+	*mag_x = raw_x * 0.1f;	// [muT/LSB]
+	*mag_z = raw_z * 0.1f;
 
 }
 
 // Computes PWM commands for 2D detumbling using a PI controller.
 // Input:  gyro_z [deg/s], magnetic field values mag_x, mag_z.
 // Output: pwm_x, pwm_y in [0,100] with neutral at PWM_NEUTRAL.
-void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t* pwm_x, uint8_t* pwm_y)
-{
+void compute_torque(float gyro_z, float mag_x, float mag_z, uint8_t *pwm_x,
+		uint8_t *pwm_y) {
 
-    // Controller parameters
-    const float Ts = 0.1f;               // [s] control loop sample time (10 Hz)
-    const float Kp = 0.05f;              // proportional gain
-    const float Ti = 8.0f;               // [s] integral time constant (tunable)
-    const float Ki = Kp / Ti;    		 // integral gain
+	// Controller parameters
+	const float Ts = 0.1f;               // [s] control loop sample time (10 Hz)
+	const float Kp = 0.05f;              // proportional gain
+	const float Ti = 8.0f;               // [s] integral time constant (tunable)
+	const float Ki = Kp / Ti;    		 // integral gain
 
-    // If below noise threshold, command neutral PWM (no actuation)
-    if (fabsf(gyro_z) < CTRL_THRESHOLD) {
-        *pwm_x = PWM_NEUTRAL;
-        *pwm_y = PWM_NEUTRAL;
-        return;
-    }
+	// If below noise threshold, command neutral PWM (no actuation)
+	if (fabsf(gyro_z) < CTRL_THRESHOLD) {
+		*pwm_x = PWM_NEUTRAL;
+		*pwm_y = PWM_NEUTRAL;
+		return;
+	}
 
-    // PI control on z-rate (target omega_z = 0): e = -gyro_z
-    const float e = -gyro_z;
+	// PI control on z-rate (target omega_z = 0): e = -gyro_z
+	const float e = -gyro_z;
 
-    // Integrator with simple clamping (anti-windup)
-    e_int += e * Ts;
-    if (e_int > 500.0f) e_int = 500.0f;
-    if (e_int < -500.0f) e_int = -500.0f;
+	// Integrator with simple clamping (anti-windup)
+	e_int += e * Ts;
+	if (e_int > 500.0f)
+		e_int = 500.0f;
+	if (e_int < -500.0f)
+		e_int = -500.0f;
 
-    // Control effort
-    const float u = Kp * e + Ki * e_int;
+	// Control effort
+	const float u = Kp * e + Ki * e_int;
 
-    // Magnetic control: m = -u * (w × B)
-    // For w=[0, 0, w_z], B=[B_x,0,B_z] -> w x B=[-w_z * B_z, w_z * B_x, 0]^T
-    const float m_x = -u * mag_z; // commanded moment along x-axis
-    const float m_y =  u * mag_x; // commanded moment along y-axis
+	// Magnetic control: m = -u * (w × B)
+	// For w=[0, 0, w_z], B=[B_x,0,B_z] -> w x B=[-w_z * B_z, w_z * B_x, 0]^T
+	const float m_x = -u * mag_z; // commanded moment along x-axis
+	const float m_y = u * mag_x; // commanded moment along y-axis
 
-    // Map commanded moment to PWM duty cycle (0–100, neutral at 50)
-    int p_x = (int)(50.0f + m_x * GAIN_X);
-    int p_y = (int)(50.0f + m_y * GAIN_Y);
+	// Map commanded moment to PWM duty cycle (0–100, neutral at 50)
+	int p_x = (int) (50.0f + m_x * GAIN_X);
+	int p_y = (int) (50.0f + m_y * GAIN_Y);
 
-    // Clamp to valid PWM range
-    if (p_x < PWM_MIN) p_x = PWM_MIN; else if (p_x > PWM_MAX) p_x = PWM_MAX;
-    if (p_y < PWM_MIN) p_y = PWM_MIN; else if (p_y > PWM_MAX) p_y = PWM_MAX;
+	// Clamp to valid PWM range
+	if (p_x < PWM_MIN)
+		p_x = PWM_MIN;
+	else if (p_x > PWM_MAX)
+		p_x = PWM_MAX;
+	if (p_y < PWM_MIN)
+		p_y = PWM_MIN;
+	else if (p_y > PWM_MAX)
+		p_y = PWM_MAX;
 
-    // Outputs
-    *pwm_x = (uint8_t)p_x;
-    *pwm_y = (uint8_t)p_y;
+	// Outputs
+	*pwm_x = (uint8_t) p_x;
+	*pwm_y = (uint8_t) p_y;
 }
-
 
 // Sets the PWM output values for the X and Y channels (green LED (PC9) and blue LED (PC8))
-void set_pwm(uint8_t pwm_x, uint8_t pwm_y)
-{
+void set_pwm(uint8_t pwm_x, uint8_t pwm_y) {
 	// Set the PWM value for the X axis (connected to PC9, TIM3 Channel 4)
-    __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_GREEN_LED, pwm_x);
+	__HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_GREEN_LED, pwm_x);
 
-    // Set the PWM value for the Y axis (connected to PC8, TIM3 Channel 3)
-    __HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, pwm_y);
+	// Set the PWM value for the Y axis (connected to PC8, TIM3 Channel 3)
+	__HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, pwm_y);
 }
-
 
 // Handles the sleep and wakeup logic based on the current rotational rate (gyro_z)
 // If the absolute gyro_z stays below SLEEP_THRESHOLD for IDLE_CYCLES, the system enters sleep mode (isSleeping = 1)
 // If, during sleep, gyro_z exceeds WAKEUP_THRESHOLD, the system wakes up
-void handle_sleep_logic(float gyro_z)
-{
-    if (!isSleeping) {
-    	// If not sleeping, check if rotational rate is below the threshold
-        if (fabsf(gyro_z) < SLEEP_THRESHOLD) {
-            quietCounter++;
-            // If below SLEEP_THRESHOLD long enough (IDLE_CYCLES), enter sleep mode
-            if (quietCounter >= IDLE_CYCLES) {
-                isSleeping = 1;
-            }
-        } else {
-        	// If movement above SLEEP_THRESHOLD detected, reset counter
-            quietCounter = 0;
-        }
-    } else {
-    	// If currently sleeping, check for movement above WAKEUP_THRESHOLD to wake up
-        if (fabsf(gyro_z) > WAKEUP_THRESHOLD) {
-            isSleeping = 0;
-            quietCounter = 0;
-        }
-    }
+void handle_sleep_logic(float gyro_z) {
+	if (!isSleeping) {
+		// If not sleeping, check if rotational rate is below the threshold
+		if (fabsf(gyro_z) < SLEEP_THRESHOLD) {
+			quietCounter++;
+			// If below SLEEP_THRESHOLD long enough (IDLE_CYCLES), enter sleep mode
+			if (quietCounter >= IDLE_CYCLES) {
+				isSleeping = 1;
+			}
+		} else {
+			// If movement above SLEEP_THRESHOLD detected, reset counter
+			quietCounter = 0;
+		}
+	} else {
+		// If currently sleeping, check for movement above WAKEUP_THRESHOLD to wake up
+		if (fabsf(gyro_z) > WAKEUP_THRESHOLD) {
+			isSleeping = 0;
+			quietCounter = 0;
+		}
+	}
 }
-
-
-// Timer interrupt callback function for STM32 HAL
-// This function is called automatically whenever the timer (here TIM14) elapses
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-	// Check if the interrupt comes from TIM14 (the control loop timer)
-    if (htim->Instance == TIM14)
-        do_control = 1;		// Set flag to indicate that a control cycle should be performed in the main loop
-}
-
-
 
 // Change timer rate function
 static inline void ctrl_timer_set_rate_hz(uint32_t hz) {
-    __HAL_TIM_DISABLE(&htim14);
-    htim14.Init.Prescaler = 47999;
-    htim14.Init.Period    = (1000 / hz) - 1;
-    HAL_TIM_Base_Init(&htim14);
-    __HAL_TIM_ENABLE_IT(&htim14, TIM_IT_UPDATE);
-    HAL_TIM_Base_Start_IT(&htim14);
+	__HAL_TIM_DISABLE(&htim14);
+	htim14.Init.Prescaler = 47999;
+	htim14.Init.Period = (1000 / hz) - 1;
+	HAL_TIM_Base_Init(&htim14);
+	__HAL_TIM_ENABLE_IT(&htim14, TIM_IT_UPDATE);
+	HAL_TIM_Base_Start_IT(&htim14);
 }
 
 // Change gyro state function: Toggle between active and ready
 static inline void gyro_active(uint8_t on) {
-    uint8_t state = on ? 0x12 : 0x10;   // DR=100 (50 Hz), ACTIVE=1/0 (as in init_gyro)
-    HAL_I2C_Mem_Write(&hi2c1, 0x21<<1, 0x13, I2C_MEMADD_SIZE_8BIT, &state, 1, 50);
-    HAL_Delay(80);
+	uint8_t state = on ? 0x12 : 0x10; // DR=100 (50 Hz), ACTIVE=1/0 (as in init_gyro)
+	HAL_I2C_Mem_Write(&hi2c1, 0x21 << 1, 0x13, I2C_MEMADD_SIZE_8BIT, &state, 1, 50);
+	HAL_Delay(80);
 }
 
 // Change magnetometer state function: Toggle between active and ready
 static inline void magnetometer_active(uint8_t on) {
-    uint8_t state = on ? 0x2D : 0x00;   // CTRL_REG1 ACTIVE=1/0, DR=101 (12.5 Hz), LNOISE=1 (as in init_magnetometer)
-    HAL_I2C_Mem_Write(&hi2c1, 0x1F<<1, 0x2A, I2C_MEMADD_SIZE_8BIT, &state, 1, 50);
-    HAL_Delay(100);
+	uint8_t state = on ? 0x2D : 0x00; // CTRL_REG1 ACTIVE=1/0, DR=101 (12.5 Hz), LNOISE=1 (as in init_magnetometer)
+	HAL_I2C_Mem_Write(&hi2c1, 0x1F << 1, 0x2A, I2C_MEMADD_SIZE_8BIT, &state, 1, 50);
+	HAL_Delay(100);
 }
 
+// Runs ACS control step (10 Hz active / 1 Hz sleep)
+// Reads sensors, updates sleep state, computes and applies PWM depending on state
+static void control_step(void) {
+
+	// Initialise local variables for current sensor readings and PWM outputs
+	float gyro_z = 0.0f;
+	float mag_x = 0, mag_z = 0;
+	uint8_t pwm_x = 0, pwm_y = 0;
+
+	if (isSleeping) {
+		// Activate sensors and read data when sleeping to check verify wake/sleep condition
+		gyro_active(1);
+		magnetometer_active(1);
+	}
+
+	// Read values from gyroscope (FXAS21002C) and magnetometer (FXOS8700CQ)
+	read_gyro(&gyro_z);
+	read_magnetometer(&mag_x, &mag_z);
+
+	// Evaluate sleep logic (set isSleeping-flag if necessary conditions are met)
+	handle_sleep_logic(gyro_z);
+
+	// Handle state transition
+	static uint8_t prevSleeping = 0;
+	if (isSleeping != prevSleeping) {
+		prevSleeping = isSleeping;
+		if (isSleeping) {
+			gyro_active(0);          // Change sensor state to ready
+			magnetometer_active(0);
+			ctrl_timer_set_rate_hz(1);   // 1 Hz while sleeping
+		} else {
+			gyro_active(1);          // Change sensor state to active
+			magnetometer_active(1);
+			ctrl_timer_set_rate_hz(10); // Change timer rate to 10 Hz (active control rate)
+
+			e_int = 0.0f; // Reset PI integrator on wake to avoid bias after long sleep
+		}
+	}
+
+	// Actuation of Magnetorquers (PWM of LEDs)
+	if (!isSleeping) {
+		// If not sleeping, calculate and set new PWM values for detumbling control
+		compute_torque(gyro_z, mag_x, mag_z, &pwm_x, &pwm_y);
+		set_pwm(pwm_x, pwm_y);
+	} else {
+		// If sleeping, set PWM to PWM_SLEEP
+		set_pwm(PWM_SLEEP, PWM_SLEEP);
+	}
+
+}
+
+// Timer interrupt callback function for STM32 HAL
+// This function is called automatically whenever the timer (here TIM14) elapses
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	// Check if the interrupt comes from TIM14 (the control loop timer)
+	if (htim->Instance == TIM14)
+		do_control = 1;	// Set flag to indicate that a control cycle should be performed in the main loop
+}
 
 /* USER CODE END 4 */
 

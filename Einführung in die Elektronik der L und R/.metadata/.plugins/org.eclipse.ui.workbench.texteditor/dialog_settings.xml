@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<item key="hasShownOverlayPopupBefore" value="true"/>
-	<item key="replaceBarOpen" value="false"/>
+	<item key="replaceBarOpen" value="true"/>
 	<list key="searchhistory">
+		<item value="fxos_active"/>
+		<item value="fxas_active"/>
+		<item value="0x03"/>
+		<item value="mag_x"/>
+		<item value="ctrl"/>
+		<item value="cntrl"/>
 		<item value="HAL_TIM_BASE"/>
+	</list>
+	<list key="replacehistory">
+		<item value="magnetometer_active"/>
+		<item value="gyro_active"/>
 	</list>
 </section>
