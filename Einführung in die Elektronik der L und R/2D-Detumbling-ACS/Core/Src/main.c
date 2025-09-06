@@ -194,8 +194,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Start PWM on green and blue LED
-  HAL_TIM_PWM_Start(&PWM_TIMER, PWM_BLUE_LED);
-  HAL_TIM_PWM_Start(&PWM_TIMER, PWM_GREEN_LED);
+  if (HAL_TIM_PWM_Start(&PWM_TIMER, PWM_BLUE_LED) != HAL_OK) {
+      Error_Handler();                 // Hard fail: Magnetorquer (PWM) must run
+  }
+  if (HAL_TIM_PWM_Start(&PWM_TIMER, PWM_GREEN_LED) != HAL_OK) {
+      Error_Handler();                 // Hard fail: Magnetorquer (PWM) must run
+  }
 
   // Power-up delay to ensure sensors are powered up after long powerless phase
   HAL_Delay(2000);
@@ -749,7 +753,7 @@ void set_pwm(uint8_t pwm_x, uint8_t pwm_y) {
 	__HAL_TIM_SET_COMPARE(&PWM_TIMER, PWM_BLUE_LED, pwm_y);
 }
 
-// Handles the sleep and wakeup logic based on the current rotational rate (gyro_z)
+// Handles the sleep and wake-up logic based on the current rotational rate (gyro_z)
 // If the absolute gyro_z stays below SLEEP_THRESHOLD for IDLE_CYCLES, the system enters sleep mode (isSleeping = 1)
 // If, during sleep, gyro_z exceeds WAKEUP_THRESHOLD, the system wakes up
 void handle_sleep_logic(float gyro_z) {
@@ -776,12 +780,20 @@ void handle_sleep_logic(float gyro_z) {
 
 // Change timer rate function
 static inline void ctrl_timer_set_rate_hz(uint32_t hz) {
+
 	__HAL_TIM_DISABLE(&htim14);
 	htim14.Init.Prescaler = 47999;
 	htim14.Init.Period = (1000 / hz) - 1;
-	HAL_TIM_Base_Init(&htim14);
-	__HAL_TIM_ENABLE_IT(&htim14, TIM_IT_UPDATE);
-	HAL_TIM_Base_Start_IT(&htim14);
+
+	if (HAL_TIM_Base_Init(&htim14) != HAL_OK) {
+	        Error_Handler();             // Hard fail: Initialisation of control loop timer failed
+	    }
+
+	    __HAL_TIM_ENABLE_IT(&htim14, TIM_IT_UPDATE);
+
+	    if (HAL_TIM_Base_Start_IT(&htim14) != HAL_OK) {
+	        Error_Handler();             // Hard fail: Start of control loop timer failed
+	    }
 }
 
 // Change gyro state function: Toggle between active and ready
