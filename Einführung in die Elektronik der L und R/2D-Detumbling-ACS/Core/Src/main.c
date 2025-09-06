@@ -72,11 +72,16 @@
 #define WAKEUP_THRESHOLD		2.0f	// [°/s] Threshold to exit sleep mode
 #define IDLE_CYCLES				50		// [-] at 10 Hz control cycle: 5 sec
 
-// Pulse Width Modulation
+// Pulse width modulation
 #define PWM_NEUTRAL				50		// [%] Neutral brightness (50 %)
 #define PWM_SLEEP				1		// [%] Sleep brightness   (1 %)
 #define PWM_MAX					100		// [%] Maximum brightness (100 %)
 #define	PWM_MIN					0		// [%] Minimum brightness (0 %)
+
+// Soft fail limits
+#define GYRO_SFAIL_LIM 			5		// [-] Soft count of fails limit for gyroscope
+#define MAGNETOMETER_SFAIL_LIM  5		// [-] Soft count of fails limit for magnetometer
+
 // ============================================================================
 /* USER CODE END PD */
 
@@ -138,14 +143,15 @@ void blink_sos_pwm(TIM_HandleTypeDef* htim, uint32_t channel);		// Modulates bri
 // Timer-rate function
 static inline void ctrl_timer_set_rate_hz(uint32_t hz);
 
-// Toggle mode function for gyroscope (FXAS21002C)
+// Toggle mode functions for sensors
 static inline void gyro_active(uint8_t on);
-
-// Toggle mode function for magnetometer (FXOS8700CQ)
 static inline void magnetometer_active(uint8_t on);
 
 // Runs one ACS control step
 static void control_step(void);
+
+// Soft Error Handler
+void softError_Handler(void);
 
 // Note:
 // For further information on the functions' behaviour see the function declaration in /* USER CODE BEGIN 4 */
@@ -614,16 +620,20 @@ void init_magnetometer(void) {
 // Returns 0.0f if there is a communication error or if no new data is available
 void read_gyro(float *gyro_z) // FXAS21002C
 {
-	const uint8_t fxas_addr = 0x21 << 1;// I2C address of FXAS21002 (SA0 = HIGH)
+	const uint8_t fxas_addr = 0x21 << 1;	// I2C address of FXAS21002 (SA0 = HIGH)
 	const uint8_t reg_status = 0x00;		// Address of the STATUS register
-	const uint8_t reg_gyro_x_msb = 0x01;// Address of the first gyro data register (X_MSB)
+	const uint8_t reg_gyro_x_msb = 0x01; 	// Address of the first gyro data register (X_MSB)
 
 	uint8_t status = 0;			// Variable to store the STATUS register value
-	uint8_t data[6] = { 0 }; // Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
+	uint8_t data[6] = { 0 }; 	// Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
+
+	// Failure counter
+	static uint8_t fail_cnt = 0;
 
 	// Read the STATUS register to check if new data is available
 	if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK) {
 		*gyro_z = 0.0f;		// I2C read failed
+		if (++fail_cnt >= GYRO_SFAIL_LIM) {softError_Handler(); fail_cnt = 0; }
 		return;
 	}
 
@@ -636,6 +646,7 @@ void read_gyro(float *gyro_z) // FXAS21002C
 	// Read 6 bytes of gyro data (X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB)
 	if (HAL_I2C_Mem_Read(&hi2c1, fxas_addr, reg_gyro_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK) {
 		*gyro_z = 0.0f;		// I2C read failed
+		if (++fail_cnt >= GYRO_SFAIL_LIM) {softError_Handler(); fail_cnt = 0; }
 		return;
 	}
 
@@ -644,6 +655,9 @@ void read_gyro(float *gyro_z) // FXAS21002C
 
 	// Convert the raw value to degrees per second (7.8125 mdps/LSB = 0.0078125 dps/LSB)
 	*gyro_z = raw_z * 0.0078125f;
+
+	// If all operations were successful, reset failure counter
+	fail_cnt = 0;
 }
 
 // Reads the X and Z components of the magnetic field from the FXOS8700 sensor via I2C
@@ -658,10 +672,14 @@ void read_magnetometer(float *mag_x, float *mag_z) // fxos8700
 	uint8_t status = 0;			// Variable to store the STATUS register value
 	uint8_t data[6] = { 0 }; // Buffer for 6 bytes: X_MSB, X_LSB, Y_MSB, Y_LSB, Z_MSB, Z_LSB
 
+	// Failure counter
+	static uint8_t fail_cnt = 0;
+
 	// Read the STATUS register to check if new data is available
 	if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_status, I2C_MEMADD_SIZE_8BIT, &status, 1, 100) != HAL_OK) {
 		*mag_x = 0;
 		*mag_z = 0;
+		if (++fail_cnt >= MAGNETOMETER_SFAIL_LIM) {softError_Handler(); fail_cnt = 0; }
 		return;		// I2C read failed
 	}
 
@@ -676,6 +694,7 @@ void read_magnetometer(float *mag_x, float *mag_z) // fxos8700
 	if (HAL_I2C_Mem_Read(&hi2c1, fxos_addr, reg_mag_x_msb, I2C_MEMADD_SIZE_8BIT, data, 6, 100) != HAL_OK) {
 		*mag_x = 0;
 		*mag_z = 0;
+		if (++fail_cnt >= MAGNETOMETER_SFAIL_LIM) {softError_Handler(); fail_cnt = 0; }
 		return;		// I2C read failed
 	}
 
@@ -686,6 +705,8 @@ void read_magnetometer(float *mag_x, float *mag_z) // fxos8700
 	*mag_x = raw_x * 0.1f;	// [muT/LSB]
 	*mag_z = raw_z * 0.1f;
 
+	// If all operations were successful, reset failure counter
+	fail_cnt = 0;
 }
 
 // Computes PWM commands for 2D detumbling using a PI controller.
@@ -859,6 +880,12 @@ static void control_step(void) {
 		set_pwm(PWM_SLEEP, PWM_SLEEP);
 	}
 
+}
+
+// Soft error handler
+void softError_Handler(void)
+{
+    // Potential non-fatal mitigation can be added here
 }
 
 // Timer interrupt callback function for STM32 HAL
